@@ -1,2 +1,2 @@
-# cp1-amity
+# cp1-amity-allocation
 Checkpoint 1
