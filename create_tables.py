@@ -3,7 +3,7 @@ import psycopg2
 import psycopg2.extras
 
 
-command = (
+ddl_commands = (
 
     """DROP TABLE IF EXISTS person CASCADE""",
     """DROP TABLE IF EXISTS room CASCADE""",
@@ -15,6 +15,7 @@ command = (
         first_name VARCHAR(10) NOT NULL,
         last_name VARCHAR(10) NOT NULL,
         other_name VARCHAR(10),
+        pgender VARCHAR (1) DEFAULT '' CONSTRAINT validate_pGender CHECK (pgender IN ('M','F', '')),
         pType VARCHAR(6) DEFAULT 'fellow' CONSTRAINT validate_pType CHECK (pType IN ('staff','fellow')),
         date_of_join VARCHAR(8) NOT NULL DEFAULT to_char(CURRENT_DATE+1, 'DD-MM-YY'),
         date_of_depart VARCHAR(8),
@@ -28,6 +29,7 @@ command = (
         room_name VARCHAR(10) NOT NULL,
         description VARCHAR(30),
         rType VARCHAR(6) DEFAULT 'office' CONSTRAINT validate_rType CHECK (rType IN ('office','lspace')),
+        rgender VARCHAR (1) DEFAULT '' CONSTRAINT validate_rGender CHECK (rgender IN ('M','F','')),
         max_no INT NOT NULL CONSTRAINT can_accomodate CHECK (max_no BETWEEN 1 AND 6),
         allocated INT DEFAULT 0 CONSTRAINT check_allocated CHECK (allocated BETWEEN 0 AND 6),
         rStatus BOOLEAN DEFAULT '1' CONSTRAINT validate_rstatus CHECK (rStatus IN ('0', '1')),
@@ -55,6 +57,8 @@ command = (
         CONSTRAINT request_id_fkey FOREIGN KEY (reqid) REFERENCES requests MATCH SIMPLE ON DELETE CASCADE,
         CONSTRAINT person_id_2_fkey FOREIGN KEY (pid) REFERENCES person MATCH SIMPLE ON DELETE NO ACTION,
         CONSTRAINT room_id_fkey FOREIGN KEY (reqid) REFERENCES room MATCH SIMPLE ON DELETE NO ACTION,
+
+    ##Check is failing for default values
         CONSTRAINT date_check CHECK (inDate <= outDate),
         UNIQUE (reqid),
         PRIMARY KEY (pid, rid)
@@ -115,9 +119,8 @@ try:
     #cur = conn.cursor()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    for c in command:
-        print (c)
-        cur.execute(c)
+    for command in ddl_commands:
+        cur.execute(command)
     
     cur.close()
     conn.commit()
@@ -126,7 +129,7 @@ except (Exception, psycopg2.DatabaseError) as error:
     if conn:
         conn.rollback()
 
-    print ('Error %s' % error )
+    print ('Error %s' % error)
     sys.exit(1)
 
 # Release the resources
