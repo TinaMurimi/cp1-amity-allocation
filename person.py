@@ -1,4 +1,4 @@
-#O-Reilly Programming Python 4th error()
+# O-Reilly Programming Python 4th error()
 # pg 28
 # pg 34, 1304: shelve pr pickle
 
@@ -8,123 +8,107 @@
 
 from abc import ABC, ABCMeta, abstractmethod
 
+
 class Person(ABC):
-    """Abstract base class
-    
-    A person is an employee at Andela. that can be assigned an Amity facility A person can either be a:
+    """Abstract Base Class
+
+    A person is an employee at Andela. that can be assigned an Amity facility. A person can either be a:
         1. fellow
         2. staff
 
     Attributes:
-        - pid: A string representing the employee ID
         - pname: A string representing the person's name
         - pgender: A string M or F representing the person's gender
-        - pType: A string representing if a person is a fellow or staff
+        - role: A string representing if a person is a fellow or staff
     """
 
-    __metaclass__ = ABCMeta
-
-    counter = 0
-
-    def __init__(self, pid, pname, pgender, pType):
-        Person.counter += 1
-        self.pid = pid
+    def __init__(self, pname, pgender, role, wants_accommodation='no'):
+        "Creates an object with the attributes"
         self.pname = pname
         self.pgender = pgender
-        self.pType = pType
-
-        if self.pType not in ['staff', 'fellow']:
-             raise RuntimeError ("A person can only be a fellow or staff")
-
-    def change_pType(self, new_pType):
-        """Returns the new employee type a person is"""
-
-        old_rType = self.pType
-        self.pType = new_pType
-        return (self.pType )
+        self.role = role
+        self.wants_accommodation = wants_accommodation
 
     def __del__(self):
-        Person.counter -= 1
-    
+        #Person.counter -= 1
+        pass
+
     @abstractmethod
     def person_type(self):
         """"Return a string representing the type of employyee a person is"""
         raise NotImplementedError()
 
+
 class Fellow(Person):
     """Fellow: An employee of Andela
 
     Attributes:
-        - pid: A string representing the staff ID
         - pname: A string representing the fellow's name
         - pgender: A string M or F representing the fellow's gender
     """
 
-    def __init__(self, pid, pname, pgender):
-        #super(Fellow, self).__init__()
-        Person.__init__(self, pid, pname, pgender, 'fellow')
+    created_fellows = 0
 
-    def afunction(self):
-        pass
+    def __init__(self, pname, pgender, wants_accommodation='N'):
+        
+        Fellow.created_fellows += 1
+        super(Fellow, self).__init__(pname, pgender, 'fellow', wants_accommodation)
+
 
     def person_type(self):
         """"Return a string representing the type of employee a person is this is"""
         return 'fellow'
 
-        
+
 class Staff(Person):
     """Staff: An employee of Andela
 
     Attributes:
-        - pid: A string representing the staff ID
         - pname: A string representing the staff's name
         - pgender: A string M or F representing the staff's gender
     """
 
-    def __init__(self, pid, pname, pgender):
+    def __init__(self, pname, pgender):
         #super(Fellow, self).__init__()
-        Person.__init__(self, pid, pname, pgender, 'staff')
+        super(Staff, self).__init__(pname, pgender, 'staff', 'N')
 
-    def afunction(self):
-        pass
-        
     def person_type(self):
         """"Return a string representing the type of employee a person is this is"""
         return 'staff'
 
 
-assert issubclass(Fellow, Person)
-#assert isinstance((), Person)
 
-if __name__ == '__main__':
-    #tina = Person('C15-NBO-1234', 'Tina', 'F', 'guest')
-    
-    #tina = Person('C15-NBO-1234', 'Tina', 'F', 'fellow')
-    adam = Fellow('C15-NBO-1235', 'Adam', 'M')
-    # ruth = Staff('C15-NBO-1236', 'Ruth', 'F')
+# if __name__ == '__main__':
+    #tina = Person('Tina', 'F', 'guest')
 
-    #print (tina.pid, tina.pname, tina.pgender, tina.pType)
-    print (adam.pid, adam.pname, adam.pgender, adam.pType)
-    # print (ruth.pid, ruth.pname, ruth.pgender, ruth.pType)
+    #tina = Person('Tina', 'F', 'fellow')
+    # adam = Fellow('Adam', 'M', 'Y')
+    #ann = Fellow('ann', 'M')
 
-    # print (tina.counter)
-    # print (Person.counter)
+    # ruth = Staff('Ruth', 'F')
 
+    #print (tina.pname, tina.pgender, tina.role, tina.wants_accommodation)
+    # print (adam.pname, adam.pgender, adam.role, adam.wants_accommodation)
+    # print (ruth.pname, ruth.pgender, ruth.role, ruth.wants_accommodation)
 
+    # print (locals())
+
+    # print (tina.created_fellows)
+    #print (Fellow.created_fellows)
 
     # print ('\n')
-    # zack = Fellow('C15-NBO-1236', 'Zack', 'M')
-    # print (zack.pType)
-    # zack.change_pType('staff')
-    # print (zack.pType)
+    # zack = Fellow('Zack', 'M')
+    # print (zack.role)
+    # zack.change_role('staff')
+    # print (zack.role)
 
     # print ('Number of objects created',Person.counter)
     # print ('\nwe are deleting', adam.pname)
-    del adam
-    print (adam.pid, adam.pname, adam.pgender, adam.pType)
+    #del adam
+    #print (adam.pname, adam.pgender, adam.role)
 
     # print (Person.counter)
-    
+
     # print ('\nwe are deleting', tina.pname)
     # del tina
     # print (Person.counter)
