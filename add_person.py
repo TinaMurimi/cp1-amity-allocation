@@ -2,8 +2,8 @@ import re
 
 from tabulate import tabulate
 
-from person import *
-from room import *
+from person import Person, Staff, Fellow
+from room import Room, LivingSpace, Office
 
 
 class Amity(object):
@@ -36,7 +36,7 @@ class Amity(object):
                     else:
                         Amity.person_id = max(Amity.person.keys()) + 1
 
-                    Amity.staff[Amity.person_id] = [Amity.person_id, new_staff.pname, new_staff.pgender.upper(
+                    Amity.staff[Amity.person_id] = [new_staff.pname, new_staff.pgender.upper(
                     ), new_staff.role.title(), new_staff.wants_accommodation.upper()]
 
                     print ('{0} added successfully with ID {1}'.format(
@@ -52,13 +52,36 @@ class Amity(object):
                 else:
                     Amity.person_id = max(Amity.person.keys()) + 1
 
-                Amity.fellow[Amity.person_id] = [Amity.person_id, new_fellow.pname, new_fellow.pgender.upper(
+                Amity.fellow[Amity.person_id] = [new_fellow.pname, new_fellow.pgender.upper(
                 ), new_fellow.role.title(), new_fellow.wants_accommodation.upper()]
 
                 print ('{0} added successfully with ID {1}'.format(
                     new_fellow.pname, Amity.person_id))
 
         Amity.person = {**Amity.fellow, **Amity.staff}
+
+    def load_people(self, text_file):
+    #(self, person_name, person_gender, role, wants_accommodation='N')
+        with open ("person.txt", "r") as myfile:
+            person_data = myfile.readlines()
+
+        for d in person_data:
+            data = d.split()
+            # data[0] = data[0] + data[1]
+            data[0] = ' '.join([data[0], data[1]])
+            data.pop(1)
+
+            person_name = data[0]
+            person_gender = data[1]
+            role = data[2]
+            
+            if len(data) < 4:
+                wants_accommodation = 'N'
+            else:
+                wants_accommodation = data[3] 
+
+            Amity.add_person(self, person_name, person_gender, role, wants_accommodation)
+        
 
     def search_person(self, people_dict, person_to_search):
 
@@ -74,14 +97,12 @@ class Amity(object):
                     list_of_found_matches = {}
                     list_of_found_matches[person_to_search] = Amity.person[person_to_search]
 
-                    #Amity.tabulate_output (self, list_of_found_matches)
+                    Amity.tabulate_room_output(self, list_of_found_matches)
                     return list_of_found_matches
 
             else:
-                person_to_search = str(person_to_search)
                 person_to_search = person_to_search.strip().title()
 
-                person_to_search = person_to_search.title()
                 reg_str = re.compile(
                     r'\b' + re.escape(person_to_search) + r'\b')
 
@@ -96,16 +117,20 @@ class Amity(object):
                 for key in found_matches:
                     list_of_found_matches[key] = Amity.person[key]
 
-                #Amity.tabulate_output (self, list_of_found_matches)
+                Amity.tabulate_room_output(self, list_of_found_matches)
                 return list_of_found_matches
 
         else:
             raise TypeError('Ínvalid input')  # to correct
 
-    def tabulate_output(self, found_matches):
+    def tabulate_room_output(self, found_matches):
         headers = ['ID', 'Name', 'Gender', 'Role', 'Needs Accommodation']
-        print (tabulate([found_matches[k] for k in sorted(
-            found_matches, key=found_matches.get)], headers=headers, tablefmt='fancy_grid'))
+
+        print(tabulate([(k,) + tuple(v) for k, v in found_matches.items()],
+                       headers=headers, tablefmt='fancy_grid'))
+
+        # print (tabulate([found_matches[k] for k in sorted(
+        #     found_matches, key=found_matches.get)], headers=headers, tablefmt='fancy_grid'))
 
     def change_person_role(self, person_to_change, new_role):
 
@@ -120,9 +145,6 @@ class Amity(object):
             return ('A person can either have the role STAFF or FELLOW')
 
         if isinstance(found_matches, dict) and len(found_matches.keys()) > 1:
-
-            Amity.tabulate_output(self, found_matches)
-
             return ('There is more than one person with the name {0}. Please view the list of all people and use their ID instead'.format(person_to_change.title()))
 
         elif isinstance(found_matches, dict) and len(found_matches.keys()) == 1:
@@ -152,7 +174,7 @@ class Amity(object):
             self, Amity.person, person_to_delete)
 
         if isinstance(found_matches, dict) and len(found_matches.keys()) > 1:
-            Amity.tabulate_output(self, found_matches)
+            # Amity.tabulate_room_output(self, found_matches)
             return ('There is more than one person with the name {0}. Please view the list of all people and use their ID instead'.format(
                 person_to_delete.title()))
 
@@ -182,10 +204,10 @@ joem = a.add_person('Joe Maina', 'M', 'fellow', 'Y')
 # print (a.person)
 # print ('-------------------------', '\n\n')
 
-# print(a.search_person(a.person, 'joe'))
+print(a.search_person(a.person, 'joe'))
 
 
-a.change_person_role('Joe', 'staff')
+# a.change_person_role('Joe', 'staff')
 
 # print ("After delete")
 # print ((a.person))
@@ -202,3 +224,6 @@ a.change_person_role('Joe', 'staff')
 # print("Staff:", a.staff.keys())
 # print("Fellow", a.fellow.keys())
 # print(a.person)
+
+
+# a.load_people("person.txt")
