@@ -1,2 +1,5 @@
 populate_tables
 sql
+__pycache__/add_person.cpython-36.pyc
+__pycache__/test_add_person.cpython-36.pyc
+.vscode/
