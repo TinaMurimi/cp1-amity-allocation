@@ -1,3 +1,5 @@
+import os
+import os.path
 import random
 import re
 
@@ -32,8 +34,7 @@ class Amity(object):
         found_matches = Amity.search_room(self, Amity.room, room_name)
 
         if isinstance(found_matches, dict) and len(found_matches.keys()) > 0:
-            print ('\n')
-            print ('Room already exists')
+            raise Exception ('Room already exists')
         else:
             if room_type not in ['office', 'space', 'living space']:
                 return ('A room can either be an OFFICE or a LIVING SPACE')
@@ -122,7 +123,7 @@ class Amity(object):
             raise TypeError('Ínvalid input')  # to correct
 
     def tabulate_room_output(self, found_matches):
-        headers = ['Room Name', 'Room Type',
+        headers = ['Room ID','Room Name', 'Room Type',
                    'Maximum', 'Room Gender', 'Occupancy']
         print(tabulate([(k,) + tuple(v) for k, v in found_matches.items()],
                        headers=headers, tablefmt='fancy_grid'))
@@ -166,6 +167,12 @@ class Amity(object):
 
         if isinstance(found_matches, dict) and len(found_matches.keys()) == 1:
             dict_key = [key for key in found_matches.keys()][0]
+
+            found_allocations = [key for key in Amity.allocation.keys() if Amity.allocation[key][1] == dict_key]
+            
+            for k in found_allocations:
+                Amity.allocation.pop(k, None)
+
             Amity.room.pop(dict_key, None)
             print ('Delete successful')
 
@@ -220,6 +227,9 @@ class Amity(object):
 
         # Allocate Office and Living Space
         Amity.allocate_room(self, Amity.person_id)
+
+        # print (Amity.person)
+        # print (Amity.allocation)
 
     def allocate_room(self, person_id):
 
@@ -386,26 +396,32 @@ class Amity(object):
 
     def load_people(self, text_file):
         # TO DO: Check input is a file
-        with open("person.txt", "r") as myfile:
-            person_data = myfile.readlines()
+        if os.path.isfile(text_file):
+            with open(text_file, "r") as myfile:
+                person_data = myfile.readlines()
 
-        for d in person_data:
-            data = d.split()
-            # data[0] = data[0] + data[1]
-            data[0] = ' '.join([data[0], data[1]])
-            data.pop(1)
-
-            person_name = data[0]
-            person_gender = data[1]
-            role = data[2]
-
-            if len(data) < 4:
-                wants_accommodation = 'N'
+            if len(person_data) == 0:
+               print ('The file is empty')
             else:
-                wants_accommodation = data[3]
+                for d in person_data:
+                    data = d.split()
+                    # data[0] = data[0] + data[1]
+                    data[0] = ' '.join([data[0], data[1]])
+                    data.pop(1)
 
-            Amity.add_person(self, person_name, person_gender,
-                             role, wants_accommodation)
+                    person_name = data[0]
+                    person_gender = data[1]
+                    role = data[2]
+
+                    if len(data) < 4:
+                        wants_accommodation = 'N'
+                    else:
+                        wants_accommodation = data[3]
+
+                    Amity.add_person(self, person_name, person_gender,
+                                    role, wants_accommodation)
+        else:
+            raise FileNotFoundError('File does not exist')
 
     def search_person(self, people_dict, person_to_search):
 
@@ -518,27 +534,27 @@ class Amity(object):
             print (found_matches)
 
 
-a = Amity()
+# a = Amity()
 
-asmara = a.create_room('Asmara', 'office', 6, '')
-tsavo = a.create_room('Tsavo', 'office', 6, '')
-platform = a.create_room('Platform', 'office', 6, '')
+# asmara = a.create_room('Asmara', 'office', 6, '')
+# tsavo = a.create_room('Tsavo', 'office', 6, '')
+# platform = a.create_room('Platform', 'office', 6, '')
 
 
-accra = a.create_room('Accra', 'space', 4, 'F')
-hog = a.create_room('Hog', 'space', 4, 'M')
-malindi = a.create_room('Malindi', 'space', 4, 'M')
-coast = a.create_room('Coast', 'space', 4, 'F')
+# accra = a.create_room('Accra', 'space', 4, 'F')
+# hog = a.create_room('Hog', 'space', 4, 'M')
+# malindi = a.create_room('Malindi', 'space', 4, 'M')
+# coast = a.create_room('Coast', 'space', 4, 'F')
 
-jane = a.add_person('Jane', 'F', 'staFF')
-maria = a.add_person('Maria', 'F', 'fellow', 'Y')
-mark = a.add_person('Mark', 'M', 'staFF')
-jose = a.add_person('Jose', 'M', 'fellow')
-joe = a.add_person('Joe', 'M', 'fellow', 'Y')
-janat = a.add_person('Janet', 'F', 'fellow', 'Y')
-luke = a.add_person('Luke', 'M', 'fellow')
+# jane = a.add_person('Jane', 'F', 'staFF')
+# maria = a.add_person('Maria', 'F', 'fellow', 'Y')
+# mark = a.add_person('Mark', 'M', 'staFF')
+# jose = a.add_person('Jose', 'M', 'fellow')
+# joe = a.add_person('Joe', 'M', 'fellow', 'Y')
+# janat = a.add_person('Janet', 'F', 'fellow', 'Y')
+# luke = a.add_person('Luke', 'M', 'fellow')
 
-a.load_people("person.txt")
+# a.load_people('person.txt')
 
 # a.search_person(a.person, 'Jose')
 
@@ -547,8 +563,8 @@ a.load_people("person.txt")
 # print (a.room)
 
 
-print ('\n***********************')
-print (a.allocation)
+# print ('\n***********************')
+# print (a.allocation)
 
 
 # print ('\n\n***********************')
@@ -557,11 +573,11 @@ print (a.allocation)
 # print ('\n\n----------------------')
 # # a.reallocate_room(101, 2)
 # a.reallocate_room('jose', 3)
-a.delete_person('Jose')
-a.delete_person(101)
+# a.delete_person('Jose')
+# a.delete_person(101)
 
-print ('\n***********************')
-print (a.allocation)
+# print ('\n***********************')
+# print (a.allocation)
 
 # print ('\n\n***********************')
 # print (a.room)
