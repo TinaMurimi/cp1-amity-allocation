@@ -5,3 +5,4 @@ sql
 test_add_person.py
 .coverage
 .coveragerc
+*.pyc
