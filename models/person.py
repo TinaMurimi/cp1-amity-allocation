@@ -22,12 +22,11 @@ class Person(ABC):
         - role: A string representing if a person is a fellow or staff
     """
 
-    def __init__(self, pname, pgender, role, wants_accommodation='no'):
+    def __init__(self, pname, pgender, role):
         "Creates an object with the attributes"
         self.pname = pname
         self.pgender = pgender
         self.role = role
-        self.wants_accommodation = wants_accommodation
 
     def __del__(self):
         #Person.counter -= 1
@@ -47,13 +46,9 @@ class Fellow(Person):
         - pgender: A string M or F representing the fellow's gender
     """
 
-    created_fellows = 0
-
     def __init__(self, pname, pgender, wants_accommodation='N'):
-        
-        Fellow.created_fellows += 1
-        super(Fellow, self).__init__(pname, pgender, 'fellow', wants_accommodation)
-
+        self.wants_accommodation = wants_accommodation
+        super(Fellow, self).__init__(pname, pgender, 'fellow')
 
     def person_type(self):
         """"Return a string representing the type of employee a person is this is"""
@@ -70,7 +65,7 @@ class Staff(Person):
 
     def __init__(self, pname, pgender):
         #super(Fellow, self).__init__()
-        super(Staff, self).__init__(pname, pgender, 'staff', 'N')
+        super(Staff, self).__init__(pname, pgender, 'staff')
 
     def person_type(self):
         """"Return a string representing the type of employee a person is this is"""

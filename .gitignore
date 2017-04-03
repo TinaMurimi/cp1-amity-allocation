@@ -1,9 +1,7 @@
 populate_tables
 sql
-__pycache__/add_person.cpython-36.pyc
-__pycache__/test_add_person.cpython-36.pyc
-__pycache__/test_person.cpython-36.pyc
-__pycache__/test_room.cpython-36.pyc
-__pycache__/amity.cpython-36.pyc
+*__pycache__
 .vscode/
 test_add_person.py
+.coverage
+.coveragerc

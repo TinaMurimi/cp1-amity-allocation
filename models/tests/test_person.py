@@ -1,6 +1,6 @@
 import unittest
 
-from person import *
+from models.person import Person, Staff, Fellow
 
 
 class TestPerson(unittest.TestCase):
@@ -40,7 +40,3 @@ class TestPerson(unittest.TestCase):
         self.assertEqual(
             "fellow", self.adam.role,
             msg='Objects created using with the Fellow class should have the role fellow')
-
-    def test_that_staff_does_not_accommodation(self):
-        self.assertEqual('N', self.adam.needs_accommodation,
-                         msg="Staff cannot be allocated living spaces")

@@ -2,14 +2,14 @@
 
 import unittest
 
-from room import *
+from models.room import Room, LivingSpace, Office
 
 
 class TestRoom(unittest.TestCase):
 
     def setUp(self):
         self.accra = Office('Accra', 6)
-        self.accra = LivingSpace('Tsavo', 6, 'M')
+        self.tsavo = LivingSpace('Tsavo', 6, 'M')
 
     def tearDown(self):
         pass
@@ -41,7 +41,3 @@ class TestRoom(unittest.TestCase):
         self.assertEqual(
             "office", self.accra.rtype,
             msg='Objects created using with the Office class should have the role Office')
-
-    def test_office_has_no_gender_assigned(self):
-        self.assertEqual(self.accra.rgender, '',
-                         msg="Offices are not gender specific")
