@@ -10,118 +10,65 @@ ddl_commands = (
     """DROP TABLE IF EXISTS requests CASCADE""",
     """DROP TABLE IF EXISTS allocations CASCADE""",
 
+
     """CREATE TABLE IF NOT EXISTS person (
-        pid VARCHAR(20),
-        first_name VARCHAR(10) NOT NULL,
-        last_name VARCHAR(10) NOT NULL,
-        other_name VARCHAR(10),
-        pgender VARCHAR (1) DEFAULT '' CONSTRAINT validate_pGender CHECK (pgender IN ('M','F', '')),
-        pType VARCHAR(6) DEFAULT 'fellow' CONSTRAINT validate_pType CHECK (pType IN ('staff','fellow')),
-        date_of_join VARCHAR(8) NOT NULL DEFAULT to_char(CURRENT_DATE+1, 'DD-MM-YY'),
-        date_of_depart VARCHAR(8),
-        pStatus BOOLEAN DEFAULT '1' CONSTRAINT validate_pstatus CHECK (pStatus IN ('0', '1')),
-        PRIMARY KEY (pid)
+        person_id INTEGER,
+        person_name VARCHAR(20) NOT NULL,
+        person_gender VARCHAR (1) DEFAULT '' CONSTRAINT validate_pGender CHECK (person_gender IN ('M','F', '')),
+        role VARCHAR(6) CONSTRAINT validate_pType CHECK (role IN ('Staff','Fellow')),
+        wants_accommodation VARCHAR(1) DEFAULT 'N' NOT NULL CHECK (wants_accommodation IN ('Y', 'N')),
+        PRIMARY KEY (person_id)
     )
     """,
 
     """CREATE TABLE IF NOT EXISTS room (
-        rid SERIAL,
+        room_id INTEGER,
         room_name VARCHAR(10) NOT NULL,
-        description VARCHAR(30),
-        rType VARCHAR(6) DEFAULT 'office' CONSTRAINT validate_rType CHECK (rType IN ('office','lspace')),
-        rgender VARCHAR (1) DEFAULT '' CONSTRAINT validate_rGender CHECK (rgender IN ('M','F','')),
-        max_no INT NOT NULL CONSTRAINT can_accomodate CHECK (max_no BETWEEN 1 AND 6),
-        allocated INT DEFAULT 0 CONSTRAINT check_allocated CHECK (allocated BETWEEN 0 AND 6),
-        rStatus BOOLEAN DEFAULT '1' CONSTRAINT validate_rstatus CHECK (rStatus IN ('0', '1')),
-        PRIMARY KEY (rid)
-    )
-    """,
-
-    """CREATE TABLE IF NOT EXISTS requests (
-        reqid SERIAL,
-        pid VARCHAR(20) NOT NULL,
-        rType VARCHAR(6) NOT NULL CONSTRAINT validate_req_rType CHECK (rType IN ('office','lspace')),
-        req_date VARCHAR(8) NOT NULL DEFAULT to_char(CURRENT_DATE, 'DD-MM-YY'),
-        CONSTRAINT person_id_fkey FOREIGN KEY (pid) REFERENCES person MATCH SIMPLE ON DELETE NO ACTION,
-        PRIMARY KEY (reqid)
+        room_type VARCHAR(6) DEFAULT 'office' CONSTRAINT validate_rType CHECK (room_type IN ('office','space')),
+        max_no INTEGER NOT NULL CONSTRAINT can_accomodate CHECK (max_no BETWEEN 1 AND 6),
+        room_gender VARCHAR (1) DEFAULT '' CONSTRAINT validate_rGender CHECK (room_gender IN ('M','F','')),
+        occupancy INTEGER DEFAULT 0 CONSTRAINT check_allocated CHECK (occupancy BETWEEN 0 AND 6),
+        PRIMARY KEY (room_id)
     )
     """,
 
     """CREATE TABLE IF NOT EXISTS allocations (
-        reqid INTEGER NOT NULL,
-        pid VARCHAR(20) NOT NULL,
-        rid INTEGER NOT NULL,
-        inDate VARCHAR(8) NOT NULL DEFAULT to_char(CURRENT_DATE + INTERVAL '1 day', 'DD-MM-YY'),
-        outDate VARCHAR(8) DEFAULT to_char(CURRENT_DATE + INTERVAL '6 months', 'DD-MM-YY'),
-
-        CONSTRAINT request_id_fkey FOREIGN KEY (reqid) REFERENCES requests MATCH SIMPLE ON DELETE CASCADE,
-        CONSTRAINT person_id_2_fkey FOREIGN KEY (pid) REFERENCES person MATCH SIMPLE ON DELETE NO ACTION,
-        CONSTRAINT room_id_fkey FOREIGN KEY (reqid) REFERENCES room MATCH SIMPLE ON DELETE NO ACTION,
-
-    ##Check is failing for default values
-        CONSTRAINT date_check CHECK (inDate <= outDate),
-        UNIQUE (reqid),
-        PRIMARY KEY (pid, rid)
+        person_id INTEGER NOT NULL,
+        room_id INTEGER NOT NULL,
+        CONSTRAINT person_id_2_fkey FOREIGN KEY (person_id) REFERENCES person MATCH SIMPLE ON DELETE NO ACTION,
+        CONSTRAINT room_id_fkey FOREIGN KEY (room_id) REFERENCES room MATCH SIMPLE ON DELETE NO ACTION,
+        PRIMARY KEY (person_id, room_id)
     )
     """,
 
     """CREATE OR REPLACE VIEW fellow AS
-        SELECT * FROM person WHERE pType = 'fellow'
+        SELECT * FROM person WHERE role = 'fellow'
     """,
 
     """CREATE OR REPLACE VIEW staff AS
-        SELECT * FROM person WHERE pType = 'staff'
+        SELECT * FROM person WHERE role = 'staff'
     """,
 
     """CREATE OR REPLACE VIEW office AS
-        SELECT * FROM room WHERE rType = 'office'
+        SELECT * FROM room WHERE room_type = 'office'
     """,
 
-    """CREATE OR REPLACE VIEW lspace AS
-        SELECT * FROM room WHERE rType = 'living space'
-    """,
-
-    """CREATE OR REPLACE VIEW available_space AS
-        SELECT * FROM room WHERE rStatus = '1' AND rType = 'living space'
-    """,
-    
-    """CREATE OR REPLACE VIEW available_office AS
-        SELECT * FROM room WHERE rStatus = '1' AND rType = 'living space'
-    """,
-
-    """CREATE OR REPLACE FUNCTION update_room_status() 
-        RETURNS TRIGGER AS
-        $BODY$
-
-            BEGIN
-                IF NEW.allocated = OLD.max_no THEN
-                    NEW.rstatus = '0';
-                END IF;
-            END;
-        $BODY$
-        LANGUAGE 'plpgsql'
-    """,
-
-    """CREATE TRIGGER availaility_update
-        AFTER UPDATE ON room
-        FOR EACH ROW
-        EXECUTE PROCEDURE update_room_status()
+    """CREATE OR REPLACE VIEW space AS
+        SELECT * FROM room WHERE room_type = 'space'
     """
 )
-
-# USE VIEWS TO SELECT STAFF AND FELLOWS & SPACE AND OFFICE
 
 conn = None
 
 try:
     # Create a new database session and returns a connection object
-    conn = psycopg2.connect(database='cp1_amity', user='amity', password='amity')
-    #cur = conn.cursor()
+    conn = psycopg2.connect(database='cp1_amity',
+                            user='amity', password='amity')
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     for command in ddl_commands:
         cur.execute(command)
-    
+
     cur.close()
     conn.commit()
 

@@ -2,12 +2,17 @@ import collections
 import json
 import os
 import os.path
+import psycopg2
+import psycopg2.extras
 import random
 import re
+import sys
+
 
 from prettytable import PrettyTable
 from tabulate import tabulate
 
+from models.config import config
 from models.person import Person, Staff, Fellow
 from models.room import Room, LivingSpace, Office
 
@@ -24,9 +29,48 @@ class Amity(object):
 
     allocation = {}
 
-    person_id = 100
-    room_id = 1
-    allocation_id = 1
+    allocation_id = 1 # Use the max value in the DB
+
+
+    conn = None
+    try:
+        conn = psycopg2.connect(database='cp1_amity')
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # To avoid duplicate primary keys from being added
+        sql_query = ("""SELECT MAX(room_id) FROM room""")
+        cur.execute(sql_query)
+        row = cur.fetchall()[0][0]
+
+        if row is not None:
+            room_id = row+1
+        else:
+            room_id = 1
+
+        sql_query = ("""SELECT MAX(person_id) FROM person""")
+        cur.execute(sql_query)
+        row = cur.fetchall()[0][0]
+
+        if row is not None:
+            person_id = row+1
+        else:
+            person_id = 1
+
+        print ('\n\n PERSON_ID',person_id)
+
+        cur.close()
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        if conn:
+            conn.rollback()
+
+        raise Exception (error)
+
+    finally:
+        if conn is not None:
+            conn.close()
+
+
 
     CP1_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -54,10 +98,7 @@ class Amity(object):
                         new_office = Office(room_name, max_no)
 
                         if len(new_office.rname) > 0:
-                            if len(Amity.room.keys()) == 0:
-                                Amity.room_id = 1
-                            else:
-                                Amity.room_id = max(Amity.room.keys()) + 1
+                            Amity.room_id = Amity.room_id if Amity.room.__len__() == 0 else max(Amity.room.keys()) + 1
 
                             Amity.office[Amity.room_id] = [new_office.rname.title(), new_office.rtype.lower(
                             ), new_office.max_no, new_office.rgender.upper(), new_office.occupancy]
@@ -75,10 +116,7 @@ class Amity(object):
                         new_space = LivingSpace(room_name, max_no, room_gender)
 
                         if len(new_space.rname) > 0:
-                            if len(Amity.room.keys()) == 0:
-                                Amity.room_id = 1
-                            else:
-                                Amity.room_id = max(Amity.room.keys()) + 1
+                            Amity.room_id = Amity.room_id if Amity.room.__len__() == 0 else max(Amity.room.keys()) + 1
 
                             Amity.space[Amity.room_id] = [new_space.rname.title(), new_space.rtype.lower(
                             ), new_space.max_no, new_space.rgender.upper(), new_space.occupancy]
@@ -173,8 +211,7 @@ class Amity(object):
                 new_staff = Staff(person_name, person_gender)
 
                 if len(new_staff.pname) > 0:
-                    Amity.person_id = 100 if len(
-                        Amity.person.keys()) == 0 else max(Amity.person.keys()) + 1
+                    Amity.person_id = Amity.person_id if Amity.person.__len__() == 0 else max(Amity.person.keys()) + 1
 
                     Amity.staff[Amity.person_id] = [new_staff.pname, new_staff.pgender.upper(
                     ), new_staff.role.title(), wants_accommodation.upper()]
@@ -187,8 +224,7 @@ class Amity(object):
                                 wants_accommodation)
 
             if len(new_fellow.pname) > 0:
-                Amity.person_id = 100 if len(
-                    Amity.person.keys()) == 0 else max(Amity.person.keys()) + 1
+                Amity.person_id = Amity.person_id if Amity.person.__len__() == 0 else max(Amity.person.keys()) + 1
 
                 Amity.fellow[Amity.person_id] = [new_fellow.pname, new_fellow.pgender.upper(
                 ), new_fellow.role.title(), new_fellow.wants_accommodation.upper()]
@@ -585,7 +621,7 @@ class Amity(object):
         unallocated_people_keys = [key for key in people_unallocated.keys()]
 
         if people_unallocated.__len__() == 0:
-            print ('All people have been allocated rooms')
+            return 'All people have been allocated rooms'
 
         else:
             sorted_people_unallocated = collections.OrderedDict(
@@ -634,32 +670,100 @@ class Amity(object):
                         Amity.person[person_id][0] for person_id in people_in_room]
                     room_name = Amity.room[room_id][0]
 
-                    print (room_name + '\n' + '------------------------------' +
+                    return (room_name + '\n' + '------------------------------' +
                            '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n')
 
                     output_file.writelines(room_name + '\n' + '------------------------------' +
                                            '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n')
 
 
-# a = Amity()
-
-# asmara = a.create_room('Asmara', 'office', 6, '')
-# tsavo = a.create_room('Tsavo', 'office', 6, '')
-# platform = a.create_room('Platform', 'office', 6, '')
 
 
-# accra = a.create_room('Accra', 'space', 4, 'F')
-# hog = a.create_room('Hog', 'space', 4, 'M')
-# malindi = a.create_room('Malindi', 'space', 4, 'M')
-# coast = a.create_room('Coast', 'space', 4, 'F')
+    def save_state(self, db_name = ''):
 
-# jane = a.add_person('Jane', 'F', 'staFF')
-# maria = a.add_person('Maria', 'F', 'fellow', 'Y')
-# mark = a.add_person('Mark', 'M', 'staFF')
-# jose = a.add_person('Jose', 'M', 'fellow')
-# joe = a.add_person('Joe', 'M', 'fellow', 'Y')
-# janat = a.add_person('Janet', 'F', 'fellow', 'Y')
-# luke = a.add_person('Luke', 'M', 'fellow')
+        all_people = []
+        for key in Amity.person.keys():
+            person_details = tuple([key] + Amity.person[key])
+            all_people.append(person_details)
+
+        all_rooms = []
+        for key in Amity.room.keys():
+            room_details = tuple([key] + Amity.room[key])
+            all_rooms.append(room_details)
+
+        all_allocations = []
+        for key in Amity.allocation.keys():
+            allocations_details = tuple(Amity.allocation[key])
+            all_allocations.append(allocations_details)
+
+        if db_name == '':
+            db_name = 'cp1_amity'
+            user_name = 'amity'
+            user_password = 'amity'
+
+        insert_people = ("""INSERT INTO person VALUES (%s, %s, %s, %s, %s)""")
+        insert_rooms = ("""INSERT INTO room VALUES (%s, %s, %s, %s, %s, %s)""")
+        insert_allocations = ("""INSERT INTO allocations VALUES (%s, %s)""")
+
+        insert_commands = [insert_people, insert_rooms, insert_allocations]
+        values_to_insert = [all_people, all_rooms, all_allocations]
+
+        conn = None
+
+        try:
+            # params = config()
+            # conn = psycopg2.connect(**params)
+            conn = psycopg2.connect(database=db_name)
+            # ,user = user_name, password = user_password)
+
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            for i in range(3):
+                cur.executemany(insert_commands[i], values_to_insert[i])
+
+            cur.close()
+            conn.commit()
+
+            print ('PERSON, ROOM, and ALLOCATIONS data successfully saved to the DB {0}'.format(db_name))
+
+        except (Exception, psycopg2.DatabaseError) as error:
+            if conn:
+                conn.rollback()
+
+            # print ('Error %s' % error)
+            raise Exception (error)
+            sys.exit(1)
+
+        # Release the resources
+        finally:
+            if conn is not None:
+                conn.close()
+
+
+    def load_state(self, db_name = '<NAME OF DB HERE>'):
+        # Use DB Name specified
+        # Check if DB exists
+        pass
+
+a = Amity()
+
+asmara = a.create_room('Asmara', 'office', 6, '')
+tsavo = a.create_room('Tsavo', 'office', 6, '')
+platform = a.create_room('Platform', 'office', 6, '')
+
+
+accra = a.create_room('Accra', 'space', 4, 'F')
+hog = a.create_room('Hog', 'space', 4, 'M')
+malindi = a.create_room('Malindi', 'space', 4, 'M')
+coast = a.create_room('Coast', 'space', 4, 'F')
+
+jane = a.add_person('Jane', 'F', 'staFF')
+maria = a.add_person('Maria', 'F', 'fellow', 'Y')
+mark = a.add_person('Mark', 'M', 'staFF')
+jose = a.add_person('Jose', 'M', 'fellow')
+joe = a.add_person('Joe', 'M', 'fellow', 'Y')
+janat = a.add_person('Janet', 'F', 'fellow', 'Y')
+luke = a.add_person('Luke', 'M', 'fellow')
 
 # a.load_people('person.txt')
 
@@ -678,7 +782,7 @@ class Amity(object):
 # print (a.room)
 
 # print ('\n\n----------------------')
-# a.reallocate_room(101, 2)
+# a.reallocate_room(101, 'Asmara')
 # a.reallocate_room('jose', 3)
 # a.delete_person('Jose')
 # a.delete_person(101)
@@ -691,3 +795,6 @@ class Amity(object):
 # # a.print_room('Asmara')
 # a.print_unallocated('Unallocated.json')
 # a.print_allocations('allocations')
+
+#a.save_state()
+a.save_state('cp1_amity')

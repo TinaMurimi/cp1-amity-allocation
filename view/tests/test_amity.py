@@ -1,4 +1,8 @@
+import psycopg2
+import psycopg2.extras
+import re
 import unittest
+
 
 from view.amity import Amity
 
@@ -16,15 +20,51 @@ class TestAmity(unittest.TestCase):
 
         Amity.allocation = {}
 
-        Amity.person_id = 100
-        Amity.room_id = 1
-        Amity.allocation_id = 1
+        allocation_id = 1
+
+        conn = None
+        try:
+            conn = psycopg2.connect(database='cp1_amity')
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            # To avoid duplicate primary keys from being added
+            sql_query = ("""SELECT MAX(room_id) FROM room""")
+            cur.execute(sql_query)
+            row = cur.fetchall()[0][0]
+
+            if row is not None:
+                Amity.room_id = row+1
+            else:
+                Amity.room_id = 1
+
+            sql_query = ("""SELECT MAX(person_id) FROM person""")
+            cur.execute(sql_query)
+            row = cur.fetchall()[0][0]
+
+            if row is not None:
+                Amity.person_id = row+2
+            else:
+                Amity.person_id = 1
+            
+            print (Amity.person_id)
+
+            cur.close()
+
+        except (Exception, psycopg2.DatabaseError) as error:
+            if conn:
+                conn.rollback()
+
+            raise Exception (error)
+
+        finally:
+            if conn is not None:
+                conn.close()
 
         platform = Amity.create_room(self, 'Platform', 'office', 6, '')
         asmara = Amity.create_room(self, 'Asmara', 'office', 6, '')
         tsavo = Amity.create_room(self, 'Tsavo', 'office', 6, '')
 
-        leila = Amity.add_person(self, 'leila', 'F', 'fellow')
+        leila = Amity.add_person(self, 'leila', 'F', 'fellow', 'Y')
 
     def test_room_type(self):
         """Test a room added is either office or a living space"""
@@ -87,21 +127,21 @@ class TestAmity(unittest.TestCase):
     def test_person_allocated_room(self):
         """Test a person is allocated room on creation"""
         found_allocations = [
-            key for key in Amity.allocation.keys() if Amity.allocation[key][0] == 100]
+            key for key in Amity.allocation.keys() if Amity.allocation[key][0] == Amity.person_id]
         self.assertIn(len(found_allocations), [1, 2])
 
     def test_person_reallocated(self):
         """Test a person is reallocated to a room successfully"""
         Dojo = Amity.create_room(self, 'Dojo', 'Office', 6)
         old_room = Amity.allocation[1][1]
-        Amity.reallocate_room(self,100, Amity.room_id)
+        Amity.reallocate_room(self, Amity.person_id, Amity.room_id)
         new_room = Amity.allocation[1][1]
         self.assertNotEqual(old_room, new_room)
 
     def test_occupancy_updated_after_reallocation(self):
         Dojo = Amity.create_room(self, 'Dojo', 'Office', 6)
         old_occupancy = Amity.room[Amity.room_id][4]
-        Amity.reallocate_room(self,100, Amity.room_id)
+        Amity.reallocate_room(self, Amity.person_id, Amity.room_id)
         new_occupancy = Amity.room[Amity.room_id][4]
         self.assertNotEqual(old_occupancy, new_occupancy)
 
@@ -120,13 +160,13 @@ class TestAmity(unittest.TestCase):
 
     def test_person_deletion(self):
         """Test a person is deleted successfully"""
-        Amity.delete_person(self, 100)
+        Amity.delete_person(self, Amity.person_id)
         with self.assertRaises(KeyError) as context:
             Amity.person[100]
 
     def test_allocations_are_deleted_when_person_is_deleted(self):
         """Test that allocations are deleted when a person is deleted"""
-        Amity.delete_person(self, 100)
+        Amity.delete_person(self, Amity.person_id)
         found_allocations = [
             key for key in Amity.allocation.keys() if Amity.allocation[key][0] == 100]
         self.assertEqual(0, len(found_allocations))
@@ -135,12 +175,52 @@ class TestAmity(unittest.TestCase):
         """Test the output for the print_room is correct"""
         # ('There are no allocations for {0}'.format(room_name))
         Dojo = Amity.create_room(self, 'Dojo', 'Office', 6)
-        Amity.reallocate_room(self,100, Amity.room_id)
+        Amity.reallocate_room(self, Amity.person_id, Amity.room_id)
 
         result = Amity.print_room(self, Amity.room_id)
-        self.assertEqual(result, {100: ['Leila', 'F', 'Fellow', 'N']})
+        self.assertEqual(result, {Amity.person_id: ['Leila', 'F', 'Fellow', 'Y']})
 
-
-    def test_print_allocation_output_to_file(self):
+    def test_print_room_outputs_to_file(self):
         """Test the output of print allocations can be written to a file"""
+        pass
+
+    def test_print_unallocated_output_to_file(self):
+        """Test the output of print_allocations is correct"""
+        unallocated = Amity.print_unallocated(self, 'unallocated_persons')
+        with open('unallocated_persons.txt', 'r') as output_file:
+            file_data = [line.split('\t') for line in output_file][0]
+
+        file_data = [re.sub('\n', '', fdata) for fdata in file_data]
+        self.assertEqual(list(file_data), ['Leila', 'Living Space'])
+
+    def test_print_allocation_outputs_to_file(self):
+        """Test the output of print allocations can be written to a file"""
+        Amity.reallocate_room(self, 100, 1)
+        pass
+
+    def test_db_exists(self):
+        with self.assertRaises(Exception) as error:
+            Amity.save_state(self, 'db_name')
+
+    def test_data_saved_to_db(self):
+
+        conn = psycopg2.connect(database='cp1_amity')
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        query = ("""SELECT * FROM room""")
+        cur.execute(query)
+        count_before_insert = cur.rowcount
+
+        Amity.save_state(self, 'cp1_amity')
+
+        query = ("""SELECT * FROM room""")
+        cur.execute(query)
+        count_after_insert = cur.rowcount
+
+        self.assertEqual(count_after_insert - count_before_insert, 3)
+
+        cur.close()
+        conn.commit()
+
+    def test_load_from_db(self):
         pass

@@ -6,3 +6,10 @@ test_add_person.py
 .coverage
 .coveragerc
 *.pyc
+unallocated_persons.txt
+unallocated.json
+allocations.txt
+.DS_Store
+.cache/*
+models/config.py
+models/database.ini
