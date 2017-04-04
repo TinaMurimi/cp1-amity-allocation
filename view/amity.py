@@ -29,8 +29,7 @@ class Amity(object):
 
     allocation = {}
 
-    allocation_id = 1 # Use the max value in the DB
-
+    allocation_id = 1
 
     conn = None
     try:
@@ -43,7 +42,7 @@ class Amity(object):
         row = cur.fetchall()[0][0]
 
         if row is not None:
-            room_id = row+1
+            room_id = row + 1
         else:
             room_id = 1
 
@@ -52,11 +51,9 @@ class Amity(object):
         row = cur.fetchall()[0][0]
 
         if row is not None:
-            person_id = row+1
+            person_id = row + 1
         else:
             person_id = 1
-
-        print ('\n\n PERSON_ID',person_id)
 
         cur.close()
 
@@ -64,41 +61,50 @@ class Amity(object):
         if conn:
             conn.rollback()
 
-        raise Exception (error)
+        raise Exception(error)
 
     finally:
         if conn is not None:
             conn.close()
 
-
-
     CP1_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    def create_room(self, room_name, room_type, max_no, room_gender=''):
-        room_name = room_name.strip().title()
-        room_type = room_type.strip().lower()
-        room_gender = room_gender.strip().lower()
-        occupancy = 0
+    # def create_room(self, room_name, room_type, room_gender=''):
+    def create_room(self, *args):
+        rooms_to_add = []  # [['accra', 'office'], ['home', 'space', 'm']]
+        not_added = []
+        for arg in args:
+            if re.search('(:)', arg):
+                rooms_to_add.append(arg.split(':'))
+            else:
+                not_added.append(arg)
 
-        found_matches = Amity.search_room(self, Amity.room, room_name)
+        if len(not_added) != 0:
+            return ('The following rooms will not added due to input format errors: {0}'.format(', '.join(not_added)))
 
-        if isinstance(found_matches, dict) and len(found_matches.keys()) > 0:
-            raise ValueError('Room already exists')
-        else:
-            if room_type not in ['office', 'space', 'living space']:
-                return ('A room can either be an OFFICE or a LIVING SPACE')
+        if len(rooms_to_add) != 0:
+            for room_details in rooms_to_add:
+                room_name = room_details[0].strip().title()
+                room_type = room_details[1].strip().lower()
+                room_gender = '' if len(room_details) < 3 else room_details[2].strip().lower()
 
-            if room_type == 'office':
-                if room_gender != '':
-                    return ('An office can be occupied by both male and female')
+                found_matches = Amity.search_room(self, Amity.room, room_name)
+
+                if isinstance(found_matches, dict) and len(found_matches.keys()) > 0:
+                    raise ValueError('Room already exists')
                 else:
-                    if max_no > 6:
-                        raise ValueError("An office can only accommodate a maximum of 6 people")
-                    else:
-                        new_office = Office(room_name, max_no)
+                    if room_type not in ['office', 'space', 'living space']:
+                        return ('A room can either be an OFFICE or a LIVING SPACE')
 
-                        if len(new_office.rname) > 0:
-                            Amity.room_id = Amity.room_id if Amity.room.__len__() == 0 else max(Amity.room.keys()) + 1
+                    elif room_type == 'office':
+                        if room_gender != '':
+                            return ('An office can be occupied by both male and female')
+                        else:
+                            new_office = Office(room_name)
+
+                            # if len(new_office.rname) > 0:
+                            #     Amity.room_id = Amity.room_id if Amity.office.__len__(
+                            #     ) == 0 else max(Amity.room.keys()) + 1
 
                             Amity.office[Amity.room_id] = [new_office.rname.title(), new_office.rtype.lower(
                             ), new_office.max_no, new_office.rgender.upper(), new_office.occupancy]
@@ -106,17 +112,16 @@ class Amity(object):
                             print ('{0} added successfully with ID {1}'.format(
                                 new_office.rname, Amity.room_id))
 
-            if room_type == 'space' or room_type == 'living space':
-                if room_gender == '':
-                    raise ValueError('Please specify if the living space is for male or female')
-                else:
-                    if max_no > 4:
-                        raise ValueError("A living space can only accommodate a maximum of 4 people")
-                    else:
-                        new_space = LivingSpace(room_name, max_no, room_gender)
+                    elif room_type == 'space' or room_type == 'living space':
+                        if room_gender == '':
+                            raise ValueError(
+                                'Please specify if the living space is for male or female')
+                        else:
+                            new_space = LivingSpace(room_name, room_gender)
 
-                        if len(new_space.rname) > 0:
-                            Amity.room_id = Amity.room_id if Amity.room.__len__() == 0 else max(Amity.room.keys()) + 1
+                            # if len(new_space.rname) > 0:
+                            #     Amity.room_id = Amity.room_id if Amity.space.__len__(
+                            #     ) == 0 else Amity.room_id +1 # max(Amity.room.keys()) + 1
 
                             Amity.space[Amity.room_id] = [new_space.rname.title(), new_space.rtype.lower(
                             ), new_space.max_no, new_space.rgender.upper(), new_space.occupancy]
@@ -124,7 +129,9 @@ class Amity(object):
                             print ('{0} added successfully with ID {1}'.format(
                                 new_space.rname, Amity.room_id))
 
-        Amity.room = {**Amity.office, **Amity.space}
+                Amity.room_id += 1
+
+            Amity.room = {**Amity.office, **Amity.space}
 
     def search_room(self, room_dict, room_to_search):
 
@@ -211,7 +218,8 @@ class Amity(object):
                 new_staff = Staff(person_name, person_gender)
 
                 if len(new_staff.pname) > 0:
-                    Amity.person_id = Amity.person_id if Amity.person.__len__() == 0 else max(Amity.person.keys()) + 1
+                    Amity.person_id = Amity.person_id if Amity.person.__len__(
+                    ) == 0 else max(Amity.person.keys()) + 1
 
                     Amity.staff[Amity.person_id] = [new_staff.pname, new_staff.pgender.upper(
                     ), new_staff.role.title(), wants_accommodation.upper()]
@@ -224,7 +232,8 @@ class Amity(object):
                                 wants_accommodation)
 
             if len(new_fellow.pname) > 0:
-                Amity.person_id = Amity.person_id if Amity.person.__len__() == 0 else max(Amity.person.keys()) + 1
+                Amity.person_id = Amity.person_id if Amity.person.__len__(
+                ) == 0 else max(Amity.person.keys()) + 1
 
                 Amity.fellow[Amity.person_id] = [new_fellow.pname, new_fellow.pgender.upper(
                 ), new_fellow.role.title(), new_fellow.wants_accommodation.upper()]
@@ -671,15 +680,12 @@ class Amity(object):
                     room_name = Amity.room[room_id][0]
 
                     return (room_name + '\n' + '------------------------------' +
-                           '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n')
+                            '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n')
 
                     output_file.writelines(room_name + '\n' + '------------------------------' +
                                            '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n')
 
-
-
-
-    def save_state(self, db_name = ''):
+    def save_state(self, db_name=''):
 
         all_people = []
         for key in Amity.person.keys():
@@ -724,14 +730,15 @@ class Amity(object):
             cur.close()
             conn.commit()
 
-            print ('PERSON, ROOM, and ALLOCATIONS data successfully saved to the DB {0}'.format(db_name))
+            print (
+                'PERSON, ROOM, and ALLOCATIONS data successfully saved to the DB {0}'.format(db_name))
 
         except (Exception, psycopg2.DatabaseError) as error:
             if conn:
                 conn.rollback()
 
             # print ('Error %s' % error)
-            raise Exception (error)
+            raise Exception(error)
             sys.exit(1)
 
         # Release the resources
@@ -739,31 +746,106 @@ class Amity(object):
             if conn is not None:
                 conn.close()
 
-
-    def load_state(self, db_name = '<NAME OF DB HERE>'):
+    def load_state(self, db_name=''):
         # Use DB Name specified
         # Check if DB exists
-        pass
+        if db_name == '':
+            db_name = 'cp1_amity'
+            user_name = 'amity'
+            user_password = 'amity'
+
+        query_staff = ("""SELECT * FROM person WHERE role = 'Staff'""")
+        query_fellow = ("""SELECT * FROM person WHERE role = 'Fellow'""")
+        query_space = ("""SELECT * FROM room WHERE room_type = 'space'""")
+        query_office = ("""SELECT * FROM room WHERE room_type = 'office'""")
+        query_allocations = ("""SELECT * FROM allocations""")
+
+        # sql_queries = [query_people, query_rooms, query_allocations]
+
+        conn = None
+        try:
+            # params = config()
+            # conn = psycopg2.connect(**params)
+            conn = psycopg2.connect(database=db_name)
+            # ,user = user_name, password = user_password)
+
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+            cur.execute(query_staff)
+            rows = cur.fetchall()
+            for row in rows:
+                staff_id = row[0]
+                details = row[1:]
+                Amity.staff[staff_id] = details
+
+            cur.execute(query_fellow)
+            rows = cur.fetchall()
+            for row in rows:
+                fellow_id = row[0]
+                details = row[1:]
+                Amity.fellow[fellow_id] = details
+
+            Amity.person = {**Amity.fellow, **Amity.staff}
+
+            cur.execute(query_space)
+            rows = cur.fetchall()
+            for row in rows:
+                space_id = row[0]
+                details = row[1:]
+                Amity.space[space_id] = details
+
+            cur.execute(query_office)
+            rows = cur.fetchall()
+            for row in rows:
+                office_id = row[0]
+                details = row[1:]
+                Amity.office[office_id] = details
+
+            Amity.room = {**Amity.office, **Amity.space}
+
+            cur.execute(query_allocations)
+            rows = cur.fetchall()
+            alloc_id = 1
+            for row in rows:
+                Amity.allocation[alloc_id] = row
+                alloc_id += 1
+
+        except (Exception, psycopg2.DatabaseError) as error:
+            if conn:
+                conn.rollback()
+
+            # print ('Error %s' % error)
+            raise Exception(error)
+            sys.exit(1)
+
+        # Release the resources
+        finally:
+            if conn is not None:
+                conn.close()
 
 a = Amity()
 
-asmara = a.create_room('Asmara', 'office', 6, '')
-tsavo = a.create_room('Tsavo', 'office', 6, '')
-platform = a.create_room('Platform', 'office', 6, '')
+# a.create_room('accra:office', 'home:space:m', 'room', 'more rooms')
+# a.create_room('Malindi:office')
 
 
-accra = a.create_room('Accra', 'space', 4, 'F')
-hog = a.create_room('Hog', 'space', 4, 'M')
-malindi = a.create_room('Malindi', 'space', 4, 'M')
-coast = a.create_room('Coast', 'space', 4, 'F')
+# asmara = a.create_room('Asmara', 'office', 6, '')
+# tsavo = a.create_room('Tsavo', 'office', 6, '')
+# platform = a.create_room('Platform', 'office', 6, '')
 
-jane = a.add_person('Jane', 'F', 'staFF')
-maria = a.add_person('Maria', 'F', 'fellow', 'Y')
-mark = a.add_person('Mark', 'M', 'staFF')
-jose = a.add_person('Jose', 'M', 'fellow')
-joe = a.add_person('Joe', 'M', 'fellow', 'Y')
-janat = a.add_person('Janet', 'F', 'fellow', 'Y')
-luke = a.add_person('Luke', 'M', 'fellow')
+
+# accra = a.create_room('Accra', 'space', 4, 'F')
+# hog = a.create_room('Hog', 'space', 4, 'M')
+# malindi = a.create_room('Malindi', 'space', 4, 'M')
+# coast = a.create_room('Coast', 'space', 4, 'F')
+
+# jane = a.add_person('Jane', 'F', 'staFF')
+# maria = a.add_person('Maria', 'F', 'fellow', 'Y')
+# mark = a.add_person('Mark', 'M', 'staFF')
+# jose = a.add_person('Jose', 'M', 'fellow')
+# joe = a.add_person('Joe', 'M', 'fellow', 'Y')
+# janat = a.add_person('Janet', 'F', 'fellow', 'Y')
+# luke = a.add_person('Luke', 'M', 'fellow')
 
 # a.load_people('person.txt')
 
@@ -778,8 +860,12 @@ luke = a.add_person('Luke', 'M', 'fellow')
 # print (a.allocation)
 
 
-# print ('\n\n***********************')
+# print ('\n\n**********ROOMS*************')
 # print (a.room)
+# print ('\n\n**********OFFICE*************')
+# print (a.office)
+# print ('\n\n**********SPACE*************')
+# print (a.space)
 
 # print ('\n\n----------------------')
 # a.reallocate_room(101, 'Asmara')
@@ -796,5 +882,9 @@ luke = a.add_person('Luke', 'M', 'fellow')
 # a.print_unallocated('Unallocated.json')
 # a.print_allocations('allocations')
 
-#a.save_state()
-a.save_state('cp1_amity')
+# a.save_state()
+# a.save_state('cp1_amity')
+
+
+print ('\n\n***********************')
+a.load_state()

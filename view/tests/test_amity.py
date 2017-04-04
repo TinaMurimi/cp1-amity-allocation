@@ -33,7 +33,7 @@ class TestAmity(unittest.TestCase):
             row = cur.fetchall()[0][0]
 
             if row is not None:
-                Amity.room_id = row+1
+                Amity.room_id = row + 1
             else:
                 Amity.room_id = 1
 
@@ -42,11 +42,9 @@ class TestAmity(unittest.TestCase):
             row = cur.fetchall()[0][0]
 
             if row is not None:
-                Amity.person_id = row+2
+                Amity.person_id = row + 2
             else:
                 Amity.person_id = 1
-            
-            print (Amity.person_id)
 
             cur.close()
 
@@ -54,40 +52,42 @@ class TestAmity(unittest.TestCase):
             if conn:
                 conn.rollback()
 
-            raise Exception (error)
+            raise Exception(error)
 
         finally:
             if conn is not None:
                 conn.close()
 
-        platform = Amity.create_room(self, 'Platform', 'office', 6, '')
-        asmara = Amity.create_room(self, 'Asmara', 'office', 6, '')
-        tsavo = Amity.create_room(self, 'Tsavo', 'office', 6, '')
+        platform = Amity.create_room(self, 'Platform:office')
+        asmara = Amity.create_room(self, 'Asmara:office')
+        tsavo = Amity.create_room(self, 'Tsavo:office')
 
         leila = Amity.add_person(self, 'leila', 'F', 'fellow', 'Y')
 
-    def test_room_type(self):
+    def test_create_room_allows_creating_several_rooms(self):
+        """Test a user can create as many rooms as possible by specifying multiple room names"""
+        before_create = Amity.room.__len__()
+        Amity.create_room(self, 'dome:office', 'home:space:m')
+        after_create = Amity.room.__len__()
+
+        self.assertEqual(2, after_create - before_create)
+
+    def test_create_room_arguments_format(self):
+        result = Amity.create_room(self, 'room', 'more rooms')
+        self.assertEqual('The following rooms will not added due to input format errors: room, more rooms', result)
+
+    def test_create_room_checks_for_room_type(self):
         """Test a room added is either office or a living space"""
-        occulus = Amity.create_room(self, 'Occulus', 'Game Room', 6, 'M')
-        self.assertEqual(
+        occulus = Amity.create_room('Occulus:Game Room')
+        self.assertNotEqual(
             'A room can either be an OFFICE or a LIVING SPACE', occulus)
 
-    def test_room_duplicate(self):
+    def test_create_room_checks_for_duplicate(self):
         """Test a room with a similar name cannot be added"""
         with self.assertRaises(ValueError):
-            result = Amity.create_room(self, 'Platform', 'office', 6, '')
+            result = Amity.create_room(self, 'Platform:office')
 
-    def test_office_capacity(self):
-        """Test that the maximum capacity for offices is 6"""
-        with self.assertRaises(ValueError):
-            Amity.create_room(self, 'Occulus', 'office', 8, '')
-
-    def test_living_space_capacity(self):
-        """Test that the maximum capacity for offices is 4"""
-        with self.assertRaises(ValueError):
-            Amity.create_room(self, 'Occulus', 'space', 8, '')
-
-    def test_person_type(self):
+    def test_add_person_checks_person_role(self):
         """Test a person added is either staff or a fellow"""
         mark = Amity.add_person(self, 'Mark', 'M', 'guest')
         self.assertEqual(
@@ -132,17 +132,17 @@ class TestAmity(unittest.TestCase):
 
     def test_person_reallocated(self):
         """Test a person is reallocated to a room successfully"""
-        Dojo = Amity.create_room(self, 'Dojo', 'Office', 6)
+        Dojo = Amity.create_room(self, 'Dojo:Office')
         old_room = Amity.allocation[1][1]
-        Amity.reallocate_room(self, Amity.person_id, Amity.room_id)
+        Amity.reallocate_room(self, Amity.person_id, Amity.room_id - 1)
         new_room = Amity.allocation[1][1]
         self.assertNotEqual(old_room, new_room)
 
     def test_occupancy_updated_after_reallocation(self):
-        Dojo = Amity.create_room(self, 'Dojo', 'Office', 6)
-        old_occupancy = Amity.room[Amity.room_id][4]
-        Amity.reallocate_room(self, Amity.person_id, Amity.room_id)
-        new_occupancy = Amity.room[Amity.room_id][4]
+        Dojo = Amity.create_room(self, 'Dojo:Office')
+        old_occupancy = Amity.room[Amity.room_id - 1][4]
+        Amity.reallocate_room(self, Amity.person_id, Amity.room_id - 1)
+        new_occupancy = Amity.room[Amity.room_id - 1][4]
         self.assertNotEqual(old_occupancy, new_occupancy)
 
     def test_room_deletion(self):
@@ -174,11 +174,12 @@ class TestAmity(unittest.TestCase):
     def test_print_room_output(self):
         """Test the output for the print_room is correct"""
         # ('There are no allocations for {0}'.format(room_name))
-        Dojo = Amity.create_room(self, 'Dojo', 'Office', 6)
-        Amity.reallocate_room(self, Amity.person_id, Amity.room_id)
+        Dojo = Amity.create_room(self, 'Dojo:Office')
+        Amity.reallocate_room(self, Amity.person_id, Amity.room_id - 1)
 
-        result = Amity.print_room(self, Amity.room_id)
-        self.assertEqual(result, {Amity.person_id: ['Leila', 'F', 'Fellow', 'Y']})
+        result = Amity.print_room(self, Amity.room_id - 1)
+        self.assertEqual(result, {Amity.person_id: [
+                         'Leila', 'F', 'Fellow', 'Y']})
 
     def test_print_room_outputs_to_file(self):
         """Test the output of print allocations can be written to a file"""
@@ -198,7 +199,7 @@ class TestAmity(unittest.TestCase):
         Amity.reallocate_room(self, 100, 1)
         pass
 
-    def test_db_exists(self):
+    def test_save_state_db_exists(self):
         with self.assertRaises(Exception) as error:
             Amity.save_state(self, 'db_name')
 
@@ -222,5 +223,14 @@ class TestAmity(unittest.TestCase):
         cur.close()
         conn.commit()
 
-    def test_load_from_db(self):
-        pass
+    def test_load_state_db_exists(self):
+        with self.assertRaises(Exception) as error:
+            Amity.save_state(self, 'db_name')
+
+    def test_load_state_loads_data_to_app(self):
+        """Test data is loaded successfully from DB to application"""
+        before_load = Amity.person.__len__()
+        Amity.load_state(self, 'cp1_amity')
+        after_load = Amity.person.__len__()
+
+        self.assertGreater(after_load, before_load)
