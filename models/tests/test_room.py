@@ -8,8 +8,8 @@ from models.room import Room, LivingSpace, Office
 class TestRoom(unittest.TestCase):
 
     def setUp(self):
-        self.accra = Office('Accra', 6)
-        self.tsavo = LivingSpace('Tsavo', 6, 'M')
+        self.accra = Office('Accra')
+        self.tsavo = LivingSpace('Tsavo', 'M')
 
     def tearDown(self):
         pass
@@ -17,7 +17,7 @@ class TestRoom(unittest.TestCase):
     def test_Room_is_an_abstact_class(self):
         """Can't instantiate abstract class Room with abstract methods room_type"""
         with self.assertRaises(Exception) as context:
-            asmara = Room('Asmara', 'office', 6, '', 3)
+            asmara = Room('Asmara')
         self.assertTrue(str(context.exception)
                         in "Can't instantiate abstract class Room with abstract methods room_type")
 
@@ -41,3 +41,11 @@ class TestRoom(unittest.TestCase):
         self.assertEqual(
             "office", self.accra.rtype,
             msg='Objects created using with the Office class should have the role Office')
+
+    def test_Office_max_6(self):
+        """Test an office can accommodate a maximum of 6 people"""
+        self.assertEqual(6, self.accra.max_no)
+
+    def test_Livingspace_max_4(self):
+        """Test a living space can accommodate a maximum of 4 people"""
+        self.assertEqual(4, self.tsavo.max_no)

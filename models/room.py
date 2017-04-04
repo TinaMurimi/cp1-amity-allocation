@@ -16,12 +16,12 @@ class Room(ABC):
         - occupancy: An integer representing the number of people currently occupying the room
     """
 
-    def __init__(self, rname, rtype, max_no, rgender='', occupancy=0):
+    def __init__(self, rname):
         self.rname = rname
-        self.rtype = rtype
-        self.max_no = max_no
-        self.rgender = rgender
-        self.occupancy = occupancy
+        # self.rtype = rtype
+        # self.max_no = max_no
+        # self.rgender = rgender
+        # self.occupancy = occupancy
 
     @abstractmethod
     def room_type(self):
@@ -41,8 +41,12 @@ class Office(Room):
         - occupancy: An integer representing the number of people currently occupying the office
     """
 
-    def __init__(self, rname, max_no=6, occupancy=0):
-        super(Office, self).__init__(rname, 'office', max_no, '', occupancy)
+    def __init__(self, rname):
+        super(Office, self).__init__(rname)
+        self.rtype = 'office'
+        self.max_no = 6
+        self.rgender = ''
+        self.occupancy = 0
 
     def room_type(self):
         """"Return a string representing the type of room"""
@@ -63,12 +67,16 @@ class LivingSpace(Room):
         - occupancy: An integer representing the number of people currently occupying the living space
     """
 
-    def __init__(self, rname, max_no, rgender, occupancy=0):
-        super(LivingSpace, self).__init__(rname, 'space', max_no, rgender, occupancy)
+    def __init__(self, rname, rgender):
+        super(LivingSpace, self).__init__(rname)
+        self.rgender = rgender
+        self.rtype = 'space'
+        self.max_no = 4
+        self.occupancy = 0
 
     def room_type(self):
         """Return a string representing the type of room"""
-        return ('lspace')
+        return ('space')
 
 
 # if __name__ == '__main__':
@@ -85,6 +93,8 @@ class LivingSpace(Room):
     # print('Room Name:', accra.rname)
 
     # tsavo = LivingSpace('Tsavo', 4, 'M')
+    # tsavo = LivingSpace('Tsavo', 'M')
+    # tsavo.
     # print (tsavo.rname)
 
     # local()
