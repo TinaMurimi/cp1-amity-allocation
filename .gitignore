@@ -13,3 +13,6 @@ allocations.txt
 .cache/*
 models/config.py
 models/database.ini
+Unallocated.txt
+person.txt
+view/amity2.py

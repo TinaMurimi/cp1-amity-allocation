@@ -4,7 +4,7 @@ import re
 import unittest
 
 
-from view.amity import Amity
+from view.amity2 import Amity
 
 
 class TestAmity(unittest.TestCase):

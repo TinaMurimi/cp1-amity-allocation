@@ -18,10 +18,7 @@ class Room(ABC):
 
     def __init__(self, rname):
         self.rname = rname
-        # self.rtype = rtype
-        # self.max_no = max_no
-        # self.rgender = rgender
-        # self.occupancy = occupancy
+        
 
     @abstractmethod
     def room_type(self):

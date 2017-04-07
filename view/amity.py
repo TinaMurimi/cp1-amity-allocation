@@ -71,7 +71,7 @@ class Amity(object):
 
     # def create_room(self, room_name, room_type, room_gender=''):
     def create_room(self, *args):
-        rooms_to_add = []  # [['accra', 'office'], ['home', 'space', 'm']]
+        rooms_to_add = []  # {2:['accra', 'office'], 1:['home', 'space', 'm']}
         not_added = []
         for arg in args:
             if re.search('(:)', arg):
@@ -245,9 +245,6 @@ class Amity(object):
 
         # Allocate Office and Living Space
         Amity.allocate_room(self, Amity.person_id)
-
-        # print (Amity.person)
-        # print (Amity.allocation)
 
     def allocate_room(self, person_id):
 
@@ -823,7 +820,7 @@ class Amity(object):
             if conn is not None:
                 conn.close()
 
-a = Amity()
+# a = Amity()
 
 # a.create_room('accra:office', 'home:space:m', 'room', 'more rooms')
 # a.create_room('Malindi:office')
@@ -886,5 +883,5 @@ a = Amity()
 # a.save_state('cp1_amity')
 
 
-print ('\n\n***********************')
-a.load_state()
+# print ('\n\n***********************')
+# a.load_state()
