@@ -9,16 +9,16 @@ class Room(ABC):
         2. living space. We use 'lspace'
 
     Attributes:
-        - rname: A string representing the room's name
-        - rtype: A string representing if a room is an office or lspace
+        - room_name: A string representing the room's name
+        - room_type: A string representing if a room is an office or lspace
         - max_no: An integer representing the maximum number of people a room can accommodate
-        - rgender: A string M or F representing the gender that can occupy a room. Defaults to '' for offices
+        - room_gender: A string M or F representing the gender that can occupy a room. Defaults to '' for offices
         - occupancy: An integer representing the number of people currently occupying the room
     """
 
-    def __init__(self, rname):
-        self.rname = rname
-        
+    def __init__(self, room_name):
+        self.room_name = room_name
+        self.occupancy = 0
 
     @abstractmethod
     def room_type(self):
@@ -33,17 +33,16 @@ class Office(Room):
         - An office can accommodate a maximum of 6 people
 
     Attributes:
-        - rname: A string representing the office's name
+        - room_name: A string representing the office's name
         - max_no: An integer representing the maximum number of people an office can accommodate
         - occupancy: An integer representing the number of people currently occupying the office
     """
 
-    def __init__(self, rname):
-        super(Office, self).__init__(rname)
-        self.rtype = 'office'
+    def __init__(self, room_name):
+        super(Office, self).__init__(room_name)
+        self.room_type = 'office'
         self.max_no = 6
-        self.rgender = ''
-        self.occupancy = 0
+        self.room_gender = ''
 
     def room_type(self):
         """"Return a string representing the type of room"""
@@ -58,57 +57,18 @@ class LivingSpace(Room):
         - Fellows have a choice to choose a living space or not
 
     Attributes:
-        - rname: A string representing the living space's name
+        - room_name: A string representing the living space's name
         - max_no: An integer representing the maximum number of people a living space can accommodate
-        - rgender: A string M or F representing the gender that can occupy a space
+        - room_gender: A string M or F representing the gender that can occupy a space
         - occupancy: An integer representing the number of people currently occupying the living space
     """
 
-    def __init__(self, rname, rgender):
-        super(LivingSpace, self).__init__(rname)
-        self.rgender = rgender
-        self.rtype = 'space'
+    def __init__(self, room_name, room_gender):
+        super(LivingSpace, self).__init__(room_name)
+        self.room_gender = room_gender
+        self.room_type = 'space'
         self.max_no = 4
-        self.occupancy = 0
 
     def room_type(self):
         """Return a string representing the type of room"""
         return ('space')
-
-
-# if __name__ == '__main__':
-    # asmara = Room('Asmara', 'office', 6, '', 3)
-    # print('\n')
-    # print('Room Name:', asmara.rname)
-    # print('Room Type:', asmara.rtype)
-    # print('Room max_no:', asmara.max_no)
-    # print('Room rgender:', asmara.rgender)
-    # print('Room occupancy:', asmara.occupancy)
-
-    # accra = Office('Accra', 6)
-    # accra = LivingSpace('Accra', 4, 'M')
-    # print('Room Name:', accra.rname)
-
-    # tsavo = LivingSpace('Tsavo', 4, 'M')
-    # tsavo = LivingSpace('Tsavo', 'M')
-    # tsavo.
-    # print (tsavo.rname)
-
-    # local()
-    # print (accra.rname, accra.rtype, accra.max_no, accra.rgender, accra.occupancy)
-    # print('Room Name:', accra.rname)
-    # print('Room Type:', accra.rtype)
-    # print('Room max_no:', accra.max_no)
-    # print('Room rgender:', accra.rgender)
-    # print('Room occupancy:', accra.occupancy)
-
-    # accra.change_rtype('lspace')
-    # print('\n\n\n')
-    # print('Room Name:', accra.rname)
-    # print('Room Type:', accra.rtype)
-    # print('Room max_no:', accra.max_no)
-    # print('Room rgender:', accra.rgender)
-    # print('Room occupancy:', accra.occupancy)
-
-
-# #Person, Fellow, Staff, Amity, Room, Office, LivingSpace

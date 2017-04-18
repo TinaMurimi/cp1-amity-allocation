@@ -14,7 +14,7 @@ ddl_commands = (
     """CREATE TABLE IF NOT EXISTS person (
         person_id INTEGER,
         person_name VARCHAR(20) NOT NULL,
-        person_gender VARCHAR (1) DEFAULT '' CONSTRAINT validate_pGender CHECK (person_gender IN ('M','F', '')),
+        person_gender VARCHAR (1) DEFAULT '' CONSTRAINT validate_person_gender CHECK (person_gender IN ('M','F', '')),
         role VARCHAR(6) CONSTRAINT validate_pType CHECK (role IN ('Staff','Fellow')),
         wants_accommodation VARCHAR(1) DEFAULT 'N' NOT NULL CHECK (wants_accommodation IN ('Y', 'N')),
         PRIMARY KEY (person_id)
@@ -24,7 +24,7 @@ ddl_commands = (
     """CREATE TABLE IF NOT EXISTS room (
         room_id INTEGER,
         room_name VARCHAR(10) NOT NULL,
-        room_type VARCHAR(6) DEFAULT 'office' CONSTRAINT validate_rType CHECK (room_type IN ('office','space')),
+        room_type VARCHAR(6) DEFAULT 'office' CONSTRAINT validate_room_type CHECK (room_type IN ('office','space')),
         max_no INTEGER NOT NULL CONSTRAINT can_accomodate CHECK (max_no BETWEEN 1 AND 6),
         room_gender VARCHAR (1) DEFAULT '' CONSTRAINT validate_rGender CHECK (room_gender IN ('M','F','')),
         occupancy INTEGER DEFAULT 0 CONSTRAINT check_allocated CHECK (occupancy BETWEEN 0 AND 6),

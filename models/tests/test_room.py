@@ -39,7 +39,7 @@ class TestRoom(unittest.TestCase):
 
     def test_default_type_for_Office_is_offce(self):
         self.assertEqual(
-            "office", self.accra.rtype,
+            "office", self.accra.room_type,
             msg='Objects created using with the Office class should have the role Office')
 
     def test_Office_max_6(self):
