@@ -6,13 +6,13 @@ import psycopg2
 import psycopg2.extras
 import random
 import re
+import string
 import sys
 
 from operator import itemgetter
 from prettytable import PrettyTable
 from tabulate import tabulate
 
-# from models.config import config
 from models.person import Person, Staff, Fellow
 from models.room import Room, LivingSpace, Office
 
@@ -32,6 +32,10 @@ class Amity(object):
     CP1_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     def create_room(self, room_type, room_gender, *rooms_to_add):
+
+        print ('\n')
+        print (rooms_to_add)
+        print (type(rooms_to_add))
 
         prev_no_of_rooms = len(Amity.room)
 
@@ -75,6 +79,13 @@ class Amity(object):
                 room_id = max_room_id if not room_ids_assgined else max(
                     room_ids_assgined) + 1
 
+                pattern = re.compile(
+                    r"[\d{}]+".format(re.escape(string.punctuation)))
+                invalid_name = [name for name in rooms_to_add[0]
+                                if pattern.search(name) or re.search('\d', name)]
+                if invalid_name:
+                    return ('A room name cannot contain numbers or spceial characters: {}'.format(', '.join(invalid_name)))
+
                 for room_name in rooms_to_add[0]:
                     room_name = room_name.strip().title()
                     found_matches = Amity.search_room(self, room_name)
@@ -94,7 +105,7 @@ class Amity(object):
                                 new_office = Office(room_name)
 
                                 Amity.office.append({'room_id': room_id, 'room_name': new_office.room_name.title(), 'room_type': new_office.room_type.lower(
-                                ), 'max_no': new_office.max_no, 'room_gender': new_office.room_gender.upper(), 'occupancy': new_office.occupancy})
+                                ), 'capacity': new_office.capacity, 'room_gender': new_office.room_gender.upper(), 'occupancy': new_office.occupancy})
 
                                 print ('{0} added successfully with ID {1}'.format(
                                     new_office.room_name, room_id))
@@ -107,7 +118,7 @@ class Amity(object):
                                 new_space = LivingSpace(room_name, room_gender)
 
                                 Amity.space.append({'room_id': room_id, 'room_name': new_space.room_name.title(), 'room_type': new_space.room_type.lower(
-                                ), 'max_no': new_space.max_no, 'room_gender': new_space.room_gender.upper(), 'occupancy': new_space.occupancy})
+                                ), 'capacity': new_space.capacity, 'room_gender': new_space.room_gender.upper(), 'occupancy': new_space.occupancy})
 
                                 print ('{0} added successfully with ID {1}'.format(
                                     new_space.room_name, room_id))
@@ -115,9 +126,10 @@ class Amity(object):
                     room_id += 1
 
             else:
-                print ('Room no rooms to add')
+                return ('Room no rooms to add')
 
         Amity.room = Amity.office + Amity.space
+
         if len(Amity.room) - prev_no_of_rooms != len(rooms_to_add[0]):
             return ('Rooms not added')
         else:
@@ -197,6 +209,12 @@ class Amity(object):
     def add_person(self, person_name, person_gender, role, wants_accommodation='N'):
 
         prev_no_of_people = len(Amity.person)
+
+        pattern = re.compile(r"[\d{}]+".format(re.escape(string.punctuation)))
+        invalid_name = [name for name in person_name if pattern.search(
+            name) or re.search('\d', name)]
+        if invalid_name:
+            return ("Person's name, {}, cannot contain numbers or spceial characters".format(person_name))
 
         if role.title() not in ['Staff', 'Fellow']:
             return (
@@ -306,7 +324,7 @@ class Amity(object):
         # Check for available office then randomly select an office to allocate
 
         available_office_list = [{'index': index, 'room_id': Amity.office[index]['room_id']} for index in range(
-            len(Amity.office)) if Amity.office[index]['max_no'] > Amity.office[index]['occupancy']]
+            len(Amity.office)) if Amity.office[index]['capacity'] > Amity.office[index]['occupancy']]
 
         if not available_office_list:
             print ('No offices to allocate')
@@ -329,10 +347,10 @@ class Amity(object):
             # Check for available living spaces then randomly select an space
             # to allocate
             available_male_spaces = [{'index': index, 'room_id': Amity.space[index]['room_id']} for index in range(len(
-                Amity.space)) if Amity.space[index]['room_gender'].upper() == 'M' and Amity.space[index]['max_no'] > Amity.space[index]['occupancy']]
+                Amity.space)) if Amity.space[index]['room_gender'].upper() == 'M' and Amity.space[index]['capacity'] > Amity.space[index]['occupancy']]
 
             available_female_spaces = [{'index': index, 'room_id': Amity.space[index]['room_id']} for index in range(len(
-                Amity.space)) if Amity.space[index]['room_gender'].upper() == 'F' and Amity.space[index]['max_no'] > Amity.space[index]['occupancy']]
+                Amity.space)) if Amity.space[index]['room_gender'].upper() == 'F' and Amity.space[index]['capacity'] > Amity.space[index]['occupancy']]
 
             # Allocate living space
             if (available_male_spaces or available_female_spaces) and wants_accommodation == 'Y':
@@ -402,7 +420,7 @@ class Amity(object):
 
                 # Check if the room is avaiable
                 available_room_list = [{'index': index, 'room_id': Amity.room[index]['room_id']} for index in range(
-                    len(Amity.room)) if Amity.room[index]['max_no'] > Amity.room[index]['occupancy']]
+                    len(Amity.room)) if Amity.room[index]['capacity'] > Amity.room[index]['occupancy']]
 
                 available_rooms_ids = [available_room_list[index]['room_id']
                                        for index in range(len(available_room_list))]
@@ -569,11 +587,10 @@ class Amity(object):
                 return ("No entry found for person with ID or name {0}".format(
                     person_to_search.title()))
             else:
-                # Amity.tabulate_person_output(self, list_of_found_matches)
                 return found_matches
 
         else:
-            return ('Ínvalid input')  # to correct
+            return ('Ínvalid input')
 
     def list_people(self):
 
@@ -919,11 +936,11 @@ class Amity(object):
                 room_id = row[0]
                 room_name = row[1]
                 room_type = row[2]
-                max_no = row[3]
+                capacity = row[3]
                 room_gender = row[4]
                 occupancy = row[5]
                 Amity.space.append({'room_id': room_id, 'room_name': room_name, 'room_type': room_type,
-                                    'max_no': max_no, 'room_gender': room_gender, 'occupancy': occupancy})
+                                    'capacity': capacity, 'room_gender': room_gender, 'occupancy': occupancy})
 
             cur.execute(query_office)
             rows = cur.fetchall()
@@ -931,11 +948,11 @@ class Amity(object):
                 room_id = row[0]
                 room_name = row[1]
                 room_type = row[2]
-                max_no = row[3]
+                capacity = row[3]
                 room_gender = row[4]
                 occupancy = row[5]
                 Amity.office.append({'room_id': room_id, 'room_name': room_name, 'room_type': room_type,
-                                     'max_no': max_no, 'room_gender': room_gender, 'occupancy': occupancy})
+                                     'capacity': capacity, 'room_gender': room_gender, 'occupancy': occupancy})
 
             Amity.room = Amity.office + Amity.space
 
@@ -953,7 +970,7 @@ class Amity(object):
             after_allocation_count = len(Amity.allocation)
 
             if before_person_count >= after_person_count or before_room_count >= after_room_count or before_allocation_count >= after_allocation_count:
-                return 'All data has not been loaded'
+                return ('Data has not been loaded because it already exists in the app')
             else:
                 return ('Data loaded successfully! Use the list functions to view the data')
 

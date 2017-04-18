@@ -38,8 +38,8 @@ from pyfiglet import figlet_format
 from termcolor import cprint
 
 from models.amity import Amity
- 
-# init(wrap=True)
+
+init(wrap=True)
 
 
 def docopt_cmd(func):
@@ -78,14 +78,6 @@ class AmityApp(cmd.Cmd):
         """ Amity Commands
         """
         cprint("\n")
-        # cprint("TSA COMMAND LIST:".center(30), "green")
-        # cprint("\n")
-        # cprint("1. Perform a word-frequency analysis: count".center(10), "green")
-        # cprint("2. Perform sentiment analysis using the Alchemy API: sentim ".center(
-        #     10), "green")
-        # cprint(
-        #     "3. Perform emotion analysis using the Alchemy API: emo".center(10), "green")
-        # cprint("4. To quit: quit ".center(10), "green")
 
     intro = introduction()
     prompt = "(Amity)>> "
@@ -107,7 +99,8 @@ class AmityApp(cmd.Cmd):
         elif args['None'] or args['n']:
             room_gender = ''
 
-        Amity.create_room(self, room_type, room_gender, args['<room_name>'])
+        print(Amity.create_room(self, room_type,
+                                room_gender, args['<room_name>']))
 
     @docopt_cmd
     def do_list_rooms(self, args):
@@ -123,17 +116,20 @@ class AmityApp(cmd.Cmd):
 
     @docopt_cmd
     def do_add_person(self, args):
-        """Usage: add_person <person_name> <person_gender> (Fellow|Staff) [<wants_accommodation>]"""
+        """Usage: add_person <first_name> <last_name> <person_gender> (Fellow|Staff|fellow|staff) [<wants_accommodation>]"""
 
-        if args['Fellow']:
+        person_name = args['<first_name>'] + ' ' + args['<last_name>']
+
+        if args['Fellow'] or args['fellow']:
             role = 'Fellow'
-        elif args['Staff']:
+        elif args['Staff'] or args['staff']:
             role = 'Staff'
 
         if not args['<wants_accommodation>']:
             args['<wants_accommodation>'] = 'N'
 
-        Amity.add_person(self, args['<person_name>'], args['<person_gender>'], role, args['<wants_accommodation>'])
+        print(Amity.add_person(self, person_name,
+                               args['<person_gender>'], role, args['<wants_accommodation>']))
 
     @docopt_cmd
     def do_list_people(self, args):
@@ -149,7 +145,10 @@ class AmityApp(cmd.Cmd):
     @docopt_cmd
     def do_reallocate_person(self, args):
         """Usage: reallocate_person <person_identifier> <new_room_name>"""
-        print (Amity.reallocate_person(self, args['<person_identifier>'], args['<new_room_name>']))
+        # print (Amity.reallocate_person(self, args['<person_identifier>'], args['<new_room_name>']))
+
+        print (Amity.reallocate_person(
+            self, args['<person_identifier>'], args['<new_room_name>']))
 
     @docopt_cmd
     def do_load_people(self, args):

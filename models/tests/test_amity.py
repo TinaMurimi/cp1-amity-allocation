@@ -28,7 +28,7 @@ class TestAmity(unittest.TestCase):
     def test_create_room_allows_creating_multiple_rooms(self):
         """Test a user can create as many rooms as possible by specifying multiple room names"""
         result = Amity.create_room(self, 'space', 'male', [
-                                   'boys', 'boys_1', 'boys_2'])
+                                   'boys', 'men', 'dudes'])
         self.assertEqual(result, '3 rooms added successfully')
 
     def test_create_room_checks_for_room_type(self):

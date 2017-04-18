@@ -16,4 +16,4 @@ models/config.py
 models/database.ini
 Unallocated.txt
 person.txt
-view/amity2.py
+models/amity2.py

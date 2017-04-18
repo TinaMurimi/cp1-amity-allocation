@@ -11,7 +11,7 @@ class Room(ABC):
     Attributes:
         - room_name: A string representing the room's name
         - room_type: A string representing if a room is an office or lspace
-        - max_no: An integer representing the maximum number of people a room can accommodate
+        - capacity: An integer representing the maximum number of people a room can accommodate
         - room_gender: A string M or F representing the gender that can occupy a room. Defaults to '' for offices
         - occupancy: An integer representing the number of people currently occupying the room
     """
@@ -34,14 +34,14 @@ class Office(Room):
 
     Attributes:
         - room_name: A string representing the office's name
-        - max_no: An integer representing the maximum number of people an office can accommodate
+        - capacity: An integer representing the maximum number of people an office can accommodate
         - occupancy: An integer representing the number of people currently occupying the office
     """
 
     def __init__(self, room_name):
         super(Office, self).__init__(room_name)
         self.room_type = 'office'
-        self.max_no = 6
+        self.capacity = 6
         self.room_gender = ''
 
     def room_type(self):
@@ -58,7 +58,7 @@ class LivingSpace(Room):
 
     Attributes:
         - room_name: A string representing the living space's name
-        - max_no: An integer representing the maximum number of people a living space can accommodate
+        - capacity: An integer representing the maximum number of people a living space can accommodate
         - room_gender: A string M or F representing the gender that can occupy a space
         - occupancy: An integer representing the number of people currently occupying the living space
     """
@@ -67,7 +67,7 @@ class LivingSpace(Room):
         super(LivingSpace, self).__init__(room_name)
         self.room_gender = room_gender
         self.room_type = 'space'
-        self.max_no = 4
+        self.capacity = 4
 
     def room_type(self):
         """Return a string representing the type of room"""
