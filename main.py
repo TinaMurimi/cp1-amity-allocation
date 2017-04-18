@@ -145,7 +145,6 @@ class AmityApp(cmd.Cmd):
     @docopt_cmd
     def do_reallocate_person(self, args):
         """Usage: reallocate_person <person_identifier> <new_room_name>"""
-        # print (Amity.reallocate_person(self, args['<person_identifier>'], args['<new_room_name>']))
 
         print (Amity.reallocate_person(
             self, args['<person_identifier>'], args['<new_room_name>']))
