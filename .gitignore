@@ -9,6 +9,7 @@ test_add_person.py
 unallocated_persons.txt
 unallocated.json
 allocations.txt
+allocation.txt
 .DS_Store
 .cache/*
 models/config.py
