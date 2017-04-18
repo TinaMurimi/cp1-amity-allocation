@@ -75,8 +75,31 @@ class AmityApp(cmd.Cmd):
         15), font="standard"), "yellow", attrs=["bold"])
 
     def introduction():
-        """ Amity Commands
-        """
+        print (""" Amity Commands
+        Usage:
+            Amity create_room (Office|Living-Space|Space) (Male|m|Female|f|None|n) <room_name>...
+            Amity list_rooms
+            Amity delete_room <room_identifier>
+            Amity add_person <person_name> <person_gender> (Fellow|Staff) [<wants_accommodation>]
+            Amity list_people
+            Amity delete_person <person_identifier>
+            Amity reallocate_person <person_identifier> <new_room_name>
+            Amity load_people
+            Amity print_allocations [-o=<filename>]
+            Amity print_unallocated [-o=<filename>]
+            Amity print_room <room_name>
+            Amity save_state [--db=<database_name>]
+            Amity load_state [--db=<database_name>]
+            Amity (-i | --interactive)
+            Amity (-h | --help)
+            Amity (--version)
+        Options:
+            -i, --interactive   Interactive Mode
+            -h, --help Show on this screen and then exit
+            --version   Show version and exit
+            -o=filename]    Specify output file
+            --db=database_name Database to save session data
+        """)
         cprint("\n")
 
     intro = introduction()
