@@ -44,8 +44,8 @@ class TestRoom(unittest.TestCase):
 
     def test_Office_max_6(self):
         """Test an office can accommodate a maximum of 6 people"""
-        self.assertEqual(6, self.accra.max_no)
+        self.assertEqual(6, self.accra.capacity)
 
     def test_Livingspace_max_4(self):
         """Test a living space can accommodate a maximum of 4 people"""
-        self.assertEqual(4, self.tsavo.max_no)
+        self.assertEqual(4, self.tsavo.capacity)

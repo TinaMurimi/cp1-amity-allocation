@@ -8,6 +8,7 @@
     Amity add_person <person_name> <person_gender> (Fellow|Staff) [<wants_accommodation>]
     Amity list_people
     Amity delete_person <person_identifier>
+    Amity allocate_unallocated
     Amity reallocate_person <person_identifier> <new_room_name>
     Amity load_people
     Amity print_allocations [-o=<filename>]
@@ -83,6 +84,7 @@ class AmityApp(cmd.Cmd):
             Amity add_person <person_name> <person_gender> (Fellow|Staff) [<wants_accommodation>]
             Amity list_people
             Amity delete_person <person_identifier>
+            Amity allocate_unallocated
             Amity reallocate_person <person_identifier> <new_room_name>
             Amity load_people
             Amity print_allocations [-o=<filename>]
@@ -135,7 +137,7 @@ class AmityApp(cmd.Cmd):
     def do_delete_room(self, args):
         """Usage: delete_room <room_identifier>"""
 
-        Amity.delete_room(self, args['<room_identifier>'])
+        print (Amity.delete_room(self, args['<room_identifier>']))
 
     @docopt_cmd
     def do_add_person(self, args):
@@ -164,6 +166,12 @@ class AmityApp(cmd.Cmd):
     def do_delete_person(self, args):
         """Usage: delete_person <person_identifier>"""
         print (Amity.delete_person(self, args['<person_identifier>']))
+
+    @docopt_cmd
+    def do_allocate_unallocated(self, args):
+        """Usage: allocate_unallocated("""
+
+        Amity.allocate_unallocated(self)
 
     @docopt_cmd
     def do_reallocate_person(self, args):
@@ -225,17 +233,8 @@ class AmityApp(cmd.Cmd):
         cprint("Exiting Application. Catch you later!", "red")
         exit()
 
-
-# opt = docopt(__doc__, sys.argv[1:])
-
-# if opt['--interactive']:
-#     AmityApp().cmdloop()
-
-# print(opt)
-
 if __name__ == "__main__":
     try:
         AmityApp().cmdloop()
     except KeyboardInterrupt:
-        # os.system("clear")
         cprint("Exiting Application. Catch you later!", "red")

@@ -88,7 +88,7 @@ class TestAmity(unittest.TestCase):
 
     def test_person_allocated_room(self):
         """Test a person is allocated room on creation"""
-        result = Amity.add_person(self, 'harry', 'M', 'fellow')
+        result = Amity.add_person(self, 'Agatha', 'F', 'fellow')
         self.assertEqual(result, 'Person added and allocated room')
 
     def test_person_is_reallocated(self):
@@ -130,7 +130,8 @@ class TestAmity(unittest.TestCase):
         Amity.delete_room(self, 'platform')
 
         result = Amity.print_unallocated(self, 'unallocated_persons')
-        self.assertEqual(result, 'Data saved to file')
+        result[0]['person_name']
+        self.assertEqual(result[0]['person_name'], 'Harry')
 
     def test_print_allocation_outputs_to_file(self):
         """Test the output of print allocations can be written to a file"""
