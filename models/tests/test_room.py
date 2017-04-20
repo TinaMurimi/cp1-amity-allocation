@@ -12,7 +12,8 @@ class TestRoom(unittest.TestCase):
         self.tsavo = LivingSpace('Tsavo', 'M')
 
     def tearDown(self):
-        pass
+        del self.accra
+        del self.tsavo
 
     def test_Room_is_an_abstact_class(self):
         """Can't instantiate abstract class Room with abstract methods room_type"""

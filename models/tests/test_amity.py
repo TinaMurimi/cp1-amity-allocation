@@ -19,11 +19,17 @@ class TestAmity(unittest.TestCase):
 
         Amity.allocation = []
 
-        platform = Amity.create_room(self, 'office', ' ', ['platform'])
-        skew = Amity.create_room(self, 'space', 'm', ['skew'])
+        self.platform = Amity.create_room(self, 'office', ' ', ['platform'])
+        self.skew = Amity.create_room(self, 'space', 'm', ['skew'])
 
-        harry = Amity.add_person(self, 'harry', 'M', 'fellow')
-        matt = Amity.add_person(self, 'matt', 'M', 'fellow', 'Y')
+        self.harry = Amity.add_person(self, 'harry', 'M', 'fellow')
+        self.matt = Amity.add_person(self, 'matt', 'M', 'fellow', 'Y')
+
+    def tearDown(self):
+        del self.platform
+        del self.skew
+        del self.harry
+        del self.matt
 
     def test_create_room_allows_creating_multiple_rooms(self):
         """Test a user can create as many rooms as possible by specifying multiple room names"""
@@ -125,11 +131,11 @@ class TestAmity(unittest.TestCase):
         result = Amity.print_room(self, 'dome')
         self.assertEqual(result, ['Matt'])
 
-    def test_print_unallocated_output_to_file(self):
+    def test_find_unallocated_output(self):
         """Test the output of print_allocations is correct"""
         Amity.delete_room(self, 'platform')
 
-        result = Amity.print_unallocated(self, 'unallocated_persons')
+        result = Amity.find_unallocated(self)
         result[0]['person_name']
         self.assertEqual(result[0]['person_name'], 'Harry')
 
@@ -138,24 +144,15 @@ class TestAmity(unittest.TestCase):
         result = Amity.print_allocations(self)
         self.assertEqual(result, 'Data saved to file')
 
-    def test_save_state_db_exists(self):
-        """Check if the DB exists"""
-        with self.assertRaises(Exception) as error:
-            Amity.save_state(self, 'db_name')
-
     def test_data_saved_to_db(self):
         """Test data is saved to DB successfully"""
-        result = Amity.save_state(self, 'cp1_amity')
-
-        self.assertEqual(result, 'Data saved to DB')
-
-    def test_load_state_db_exists(self):
-        """Check if the DB exists"""
-        with self.assertRaises(Exception) as error:
-            Amity.save_state(self, 'db_name')
+        dome = Amity.create_room(self, 'space', 'm', ['dome'])
+        result = Amity.save_state(self, 'test_amity')
+        self.assertEqual(
+            result, 'Session data successfully saved to DB named: test_amity.db')
 
     def test_load_state_loads_data_to_app(self):
         """Test data is loaded successfully from DB to application"""
-        result = Amity.load_state(self, 'cp1_amity')
+        result = Amity.load_state(self, 'test_amity')
         self.assertEqual(
             result, 'Data loaded successfully! Use the list functions to view the data')

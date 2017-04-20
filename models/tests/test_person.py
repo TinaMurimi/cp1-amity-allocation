@@ -10,7 +10,8 @@ class TestPerson(unittest.TestCase):
         self.ann = Staff('Ann', 'F')
 
     def tearDown(self):
-        pass
+        del self.adam
+        del self.ann
 
     def test_Person_is_an_abstact_class(self):
         """Can't instantiate abstract class Person with abstract methods person_type"""

@@ -2,6 +2,7 @@ populate_tables
 sql
 *__pycache__
 .vscode/
+*.db
 test_add_person.py
 .coverage
 .coveragerc

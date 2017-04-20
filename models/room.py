@@ -1,10 +1,9 @@
-import gc
-
 from abc import ABC, ABCMeta, abstractmethod
 
 
 class Room(ABC):
-    """An Amity facility within Andela. A room can either be a(n):
+    """ Abstract Base Class
+    An Amity facility within Andela. A room can either be a(n):
         1. office
         2. living space. We use 'lspace'
 
@@ -42,11 +41,12 @@ class Office(Room):
         super(Office, self).__init__(room_name)
         self.room_type = 'office'
         self.capacity = 6
-        self.room_gender = ''
+        self.room_gender = 'N'
 
     def room_type(self):
         """"Return a string representing the type of room"""
-        return ('office')
+        return 'office'
+
 
 class LivingSpace(Room):
     """LivingSpace: An Amity facility within Andela
@@ -70,5 +70,5 @@ class LivingSpace(Room):
         self.capacity = 4
 
     def room_type(self):
-        """Return a string representing the type of room"""
-        return ('space')
+        """"Return a string representing the type of room"""
+        return 'space'

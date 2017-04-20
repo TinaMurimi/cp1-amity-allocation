@@ -122,7 +122,7 @@ class AmityApp(cmd.Cmd):
         elif args['Female'] or args['f']:
             room_gender = 'F'
         elif args['None'] or args['n']:
-            room_gender = ''
+            room_gender = 'N'
 
         print(Amity.create_room(self, room_type,
                                 room_gender, args['<room_name>']))
@@ -169,9 +169,12 @@ class AmityApp(cmd.Cmd):
 
     @docopt_cmd
     def do_allocate_unallocated(self, args):
-        """Usage: allocate_unallocated("""
+        """Usage: allocate_unallocated [<person_identifier>]"""
 
-        Amity.allocate_unallocated(self)
+        if not args['<person_identifier>']:
+            args['<person_identifier>'] = ''
+
+        print (Amity.allocate_unallocated(self, args['<person_identifier>']))
 
     @docopt_cmd
     def do_reallocate_person(self, args):
@@ -214,13 +217,13 @@ class AmityApp(cmd.Cmd):
         """Usage: save_state [--db=<database_name>]"""
 
         if not args['--db']:
-            args['--db'] = 'cp1_amity'
+            args['--db'] = 'amity'
 
-        Amity.save_state(self, args['--db'])
+        print (Amity.save_state(self, args['--db']))
 
     @docopt_cmd
     def do_load_state(self, args):
-        """Usage: load_state [--db=<database_name>]"""
+        """Usage: load_state (--db=<database_name>)"""
 
         if not args['--db']:
             args['--db'] = 'cp1_amity'
