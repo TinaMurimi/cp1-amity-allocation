@@ -34,7 +34,7 @@ class TestPerson(unittest.TestCase):
             msg="The object is not an instance of the class 'Fellow'")
 
     def test_fellow_object_type(self):
-        self.assertTrue((type(self.adam) is Fellow),
+        self.assertTrue(isinstance(self.adam, Fellow),
                         msg='The object should be of type Fellow')
 
     def test_default_role_for_fellow_is_fellow(self):

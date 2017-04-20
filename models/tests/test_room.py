@@ -35,7 +35,7 @@ class TestRoom(unittest.TestCase):
             self.accra, Office, msg="The object is not an instance of the class 'Office'")
 
     def test_Office_object_type(self):
-        self.assertTrue((type(self.accra) is Office),
+        self.assertTrue(isinstance(self.accra, Office),
                         msg='The object should be of type Office')
 
     def test_default_type_for_Office_is_offce(self):

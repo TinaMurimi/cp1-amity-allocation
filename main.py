@@ -28,7 +28,6 @@
  """
 
 import cmd
-import os
 import sys
 
 

@@ -1,5 +1,3 @@
-import psycopg2
-import psycopg2.extras
 import re
 import unittest
 
@@ -101,7 +99,6 @@ class TestAmity(unittest.TestCase):
         """Test a person is reallocated to a room successfully"""
         Amity.create_room(self, 'office', ' ', ['tsavo'])
         result = Amity.reallocate_person(self, 'harry', 'tsavo')
-
         self.assertEqual(
             result, 'Harry has been reallocated office from Platform to Tsavo')
 
@@ -109,7 +106,6 @@ class TestAmity(unittest.TestCase):
         """Test a person is not realocated to a room of the wrong gender"""
         Amity.create_room(self, 'space', 'f', ['ruby'])
         result = Amity.reallocate_person(self, 'harry', 'ruby')
-
         self.assertEqual(
             result, 'A person of gender M is being allocated to a living space for F')
 
@@ -127,16 +123,13 @@ class TestAmity(unittest.TestCase):
         """Test the output for the print_room is correct"""
         dome = Amity.create_room(self, 'space', 'm', ['dome'])
         Amity.reallocate_person(self, 'matt', 'dome')
-
         result = Amity.print_room(self, 'dome')
         self.assertEqual(result, ['Matt'])
 
     def test_find_unallocated_output(self):
         """Test the output of print_allocations is correct"""
         Amity.delete_room(self, 'platform')
-
         result = Amity.find_unallocated(self)
-        result[0]['person_name']
         self.assertEqual(result[0]['person_name'], 'Harry')
 
     def test_print_allocation_outputs_to_file(self):
@@ -146,7 +139,6 @@ class TestAmity(unittest.TestCase):
 
     def test_data_saved_to_db(self):
         """Test data is saved to DB successfully"""
-        dome = Amity.create_room(self, 'space', 'm', ['dome'])
         result = Amity.save_state(self, 'test_amity')
         self.assertEqual(
             result, 'Session data successfully saved to DB named: test_amity.db')

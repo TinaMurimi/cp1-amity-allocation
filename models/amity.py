@@ -1,21 +1,17 @@
-import collections
 import os
 import os.path
-import psycopg2
-import psycopg2.extras
 import random
 import re
 import string
-import sys
 
 from operator import itemgetter
-from sqlalchemy import create_engine, MetaData, exc
+from sqlalchemy import create_engine, exc
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import sessionmaker
 from tabulate import tabulate
 
-from models.person import Person, Staff, Fellow
-from models.room import Room, LivingSpace, Office
+from models.person import Staff, Fellow
+from models.room import LivingSpace, Office
 from models.models import Base, Allocations, Employees, Rooms
 from settings import CP1_DIR
 
@@ -170,7 +166,6 @@ class Amity(object):
         found_matches = Amity.search_room(self, room_to_delete)
 
         if isinstance(found_matches, dict) and found_matches:
-            room_index_to_delete = found_matches['index']
             room_id_to_delete = found_matches['details']['room_id']
             room_type_to_delete = found_matches['details']['room_type']
             room_name_to_delete = found_matches['details']['room_name']
@@ -441,7 +436,6 @@ class Amity(object):
                 elif isinstance(found_people, list) and len(found_people) == 1:
                     found_people = found_people[0]
                     person_id = found_people['details']['person_id']
-                    person_name = found_people['details']['person_name']
                     Amity.allocate_room(self, person_id)
 
                 else:
@@ -700,7 +694,6 @@ class Amity(object):
 
             found_matches = found_matches[0]
 
-            person_index_to_delete = found_matches['index']
             person_id_to_delete = found_matches['details']['person_id']
             person_role_to_delete = found_matches['details']['role']
             person_name_to_delete = found_matches['details']['person_name']
@@ -735,7 +728,6 @@ class Amity(object):
                                         if allocation_details['room_id'] in space_ids]
 
                 if prev_allocated_space:
-                    prev_allocated_space_index = prev_allocated_space[0]['index']
                     prev_allocated_space_id = prev_allocated_space[0]['room_id']
 
                     prev_space = [{'index': index, 'details': spaces}
@@ -790,7 +782,6 @@ class Amity(object):
         if isinstance(found_rooms, dict) and found_rooms:
             room_id = found_rooms['details']['room_id']
             room_name = found_rooms['details']['room_name']
-            room_index = found_rooms['index']
 
             found_allocations = [allocations['room_id'] for allocations in Amity.allocation
                                  if allocations['room_id'] == room_id]
@@ -959,11 +950,6 @@ class Amity(object):
 
     def save_state(self, db_name=''):
         """Persists all the data stored in the app to a Postgres database. Specifying the DB explicitly stores the data in the DB specified"""
-
-        all_people = [tuple(people.values()) for people in Amity.person]
-        all_rooms = [tuple(rooms.values()) for rooms in Amity.room]
-        all_allocations = [tuple(allocations.values())
-                           for allocations in Amity.allocation]
 
         if db_name == '':
             db_name = 'amity.db'
