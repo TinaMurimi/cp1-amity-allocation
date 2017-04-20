@@ -1,4 +1,3 @@
-import re
 import unittest
 
 from models.amity import Amity

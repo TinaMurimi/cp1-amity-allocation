@@ -713,7 +713,6 @@ class Amity(object):
                                          if allocation_details['room_id'] in office_ids]
 
                 if prev_allocated_office:
-                    prev_allocated_office_index = prev_allocated_office[0]['index']
                     prev_allocated_office_id = prev_allocated_office[0]['room_id']
 
                     prev_office = [{'index': index, 'details': value}

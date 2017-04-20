@@ -28,8 +28,6 @@
  """
 
 import cmd
-import sys
-
 
 from colorama import *
 from docopt import docopt, DocoptExit
