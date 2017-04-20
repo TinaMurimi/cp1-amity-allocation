@@ -45,8 +45,19 @@ class Amity(object):
         if room_gender.title() not in ('Male', 'Female', 'M', 'F', 'N'):
             return(
                 'Use Male or Female to specify gender that will occupy room')
+
         else:
             if rooms_to_add:
+                Amity.room = Amity.office + Amity.space
+
+                # Generate unique ID for rooms
+                if Amity.room:
+                    new_room_id = max([rooms['room_id']
+                                       for rooms in Amity.room]) + 1
+                else:
+                    new_room_id = 1
+
+                # Check if the room_name exists
                 pattern = re.compile(
                     r"[\d{}]+".format(re.escape(string.punctuation)))
                 invalid_name = [name for name in rooms_to_add[0]
@@ -72,7 +83,7 @@ class Amity(object):
                             else:
                                 new_office = Office(room_name)
 
-                                Amity.office.append({'room_id': id(new_office),
+                                Amity.office.append({'room_id': new_room_id,
                                                      'room_name': new_office.room_name.title(),
                                                      'room_type': new_office.room_type.lower(),
                                                      'capacity': new_office.capacity,
@@ -80,9 +91,7 @@ class Amity(object):
                                                      'occupancy': new_office.occupancy})
 
                                 print ('{0} added successfully with ID {1}'.format(
-                                    new_office.room_name, id(new_office)))
-
-                                room_id = id(new_office)
+                                    new_office.room_name, new_room_id))
 
                         elif room_type == 'space' or room_type == 'living space':
                             if room_gender == 'N':
@@ -91,7 +100,7 @@ class Amity(object):
                             else:
                                 new_space = LivingSpace(room_name, room_gender)
 
-                                Amity.space.append({'room_id': id(new_space),
+                                Amity.space.append({'room_id': new_room_id,
                                                     'room_name': new_space.room_name.title(),
                                                     'room_type': new_space.room_type.lower(),
                                                     'capacity': new_space.capacity,
@@ -99,9 +108,12 @@ class Amity(object):
                                                     'occupancy': new_space.occupancy})
 
                                 print ('{0} added successfully with ID {1}'.format(
-                                    new_space.room_name, id(new_space)))
+                                    new_space.room_name, new_room_id))
 
-                                room_id = id(new_space)
+                        else:
+                            print ('ROOM TYPE WITH WRONG FORMAT')
+
+                        new_room_id += 1
 
             else:
                 return ('Room no rooms to add')
@@ -124,10 +136,10 @@ class Amity(object):
             reg_str = re.compile(
                 r'\b' + re.escape(room_to_search) + r'\b')
 
-            found_matches = [{'index': index, 'details': dict_to_search[index]}
-                             for index in range(len(dict_to_search))
-                             if reg_str.search(str(dict_to_search[index]['room_id']))
-                             or reg_str.search(dict_to_search[index]['room_name'])]
+            found_matches = [{'index': index, 'details': value}
+                             for index, value in enumerate(dict_to_search)
+                             if reg_str.search(str(value['room_id']))
+                             or reg_str.search(value['room_name'])]
 
             if not found_matches:
                 return ("No entry found for room with ID or name {0}".format(
@@ -164,10 +176,11 @@ class Amity(object):
             room_name_to_delete = found_matches['details']['room_name']
 
             # Delete allocations for room
-            found_allocations = [index for index in range(
-                len(Amity.allocation)) if Amity.allocation[index]['room_id'] == room_id_to_delete]
-            Amity.allocation = [Amity.allocation[index] for index in range(
-                len(Amity.allocation)) if index not in found_allocations]
+            found_allocations = [index for index, allocations in enumerate(
+                Amity.allocation) if allocations['room_id'] == room_id_to_delete]
+
+            Amity.allocation = [allocations for index, allocations in enumerate(
+                Amity.allocation) if index not in found_allocations]
 
             if room_type_to_delete == 'office':
                 index_in_office_dict = [index for index in range(
@@ -227,11 +240,18 @@ class Amity(object):
         found_people = Amity.search_person(self, person_name)
 
         if found_people and isinstance(found_people, list):
-            print ('{} already exists. Add an initial to differentiate the names'.format(
+            return ('{} already exists. Add an initial to differentiate the names'.format(
                 person_name))
 
         else:
             Amity.person = Amity.fellow + Amity.staff
+
+            # Generate unique ID for rooms
+            if Amity.person:
+                new_person_id = max([persons['person_id']
+                                     for persons in Amity.person]) + 1
+            else:
+                new_person_id = 100
 
             if role == 'Staff':
                 if wants_accommodation != 'N':
@@ -239,37 +259,33 @@ class Amity(object):
                 else:
                     new_staff = Staff(person_name, person_gender)
 
-                    Amity.staff.append({'person_id': id(new_staff),
+                    Amity.staff.append({'person_id': new_person_id,
                                         'person_name': new_staff.person_name,
                                         'person_gender': new_staff.person_gender,
                                         'role': new_staff.role.title(),
                                         'wants_accommodation': wants_accommodation})
 
                     print ('\n{0} added successfully with ID {1}'.format(
-                        new_staff.person_name, id(new_staff)))
+                        new_staff.person_name, new_person_id))
 
                     # Allocate Office and Living Space
-                    Amity.allocate_room(self, id(new_staff))
-
-                    person_id = id(new_staff)
+                    Amity.allocate_room(self, new_person_id)
 
             elif role == 'Fellow':
                 new_fellow = Fellow(person_name, person_gender,
                                     wants_accommodation)
 
-                Amity.fellow.append({'person_id': id(new_fellow),
+                Amity.fellow.append({'person_id': new_person_id,
                                      'person_name': new_fellow.person_name,
                                      'person_gender': new_fellow.person_gender,
                                      'role': new_fellow.role.title(),
                                      'wants_accommodation': new_fellow.wants_accommodation})
 
                 print ('\n{0} added successfully with ID {1}'.format(
-                    new_fellow.person_name, id(new_fellow)))
+                    new_fellow.person_name, new_person_id))
 
                 # Allocate Office and Living Space
-                Amity.allocate_room(self, id(new_fellow))
-
-                person_id = id(new_fellow)
+                Amity.allocate_room(self, new_person_id)
 
             Amity.person = Amity.fellow + Amity.staff
 
@@ -279,7 +295,7 @@ class Amity(object):
             else:
                 # Check a person has been allocated rooms
                 found_allocations = [
-                    allocations for allocations in Amity.allocation if allocations['person_id'] == person_id]
+                    allocations for allocations in Amity.allocation if allocations['person_id'] == new_person_id]
                 if found_allocations:
                     return ('Person added and allocated room')
                 else:
@@ -297,9 +313,9 @@ class Amity(object):
         person_gender = person_details['person_gender'].upper()
         wants_accommodation = person_details['wants_accommodation']
 
-        found_allocations = [{'index': index, 'room_id': Amity.allocation[index]['room_id']}
-                             for index in range(len(Amity.allocation))
-                             if Amity.allocation[index]['person_id'] == person_id_to_allocate]
+        found_allocations = [{'index': index, 'room_id': value['room_id']}
+                             for index, value in enumerate(Amity.allocation)
+                             if value['person_id'] == person_id_to_allocate]
 
         found_room = [rooms['room_id'] for rooms in found_allocations]
 
@@ -310,21 +326,22 @@ class Amity(object):
 
         if found_allocations and (set(found_room) & set(all_offices)):
             return ('Person already allocated office')
+
         else:
-            # Allocate office
             # Check for available office then randomly select an office to
             # allocate
-            available_office_list = [{'index': index, 'room_id': Amity.office[index]['room_id']} for index in range(
-                len(Amity.office)) if Amity.office[index]['capacity'] > Amity.office[index]['occupancy']]
+            available_office_list = [{'index': index, 'room_id': offices['room_id']} for index, offices in enumerate(Amity.office)
+                                     if offices['capacity'] > offices['occupancy']]
 
             if not available_office_list or not Amity.office:
                 print ('No offices to allocate')
             else:
+                # Allocate office
                 office_to_allocate = random.choice(available_office_list)
                 Amity.allocation.append(
                     {'person_id': person_id_to_allocate, 'room_id': office_to_allocate['room_id']})
 
-                print ('\n{} has been allocated to office'.format(person_name))
+                print ('{} has been allocated to office'.format(person_name))
 
                 # Update the number of the randomly selected office occupants
                 prev_occupancy = Amity.office[office_to_allocate['index']]['occupancy']
@@ -336,22 +353,24 @@ class Amity(object):
         # Allocate living space
         if found_allocations and (set(found_room) & set(all_spaces)):
             return ('Person already allocated living space')
+
         else:
             if wants_accommodation == 'Y':
                 if not Amity.space:
                     print ('No living spaces to allocate')
-                else:
-                    # Check for available living spaces then randomly select a space
-                    # to allocate
-                    available_male_spaces = [{'index': index, 'room_id': Amity.space[index]['room_id']}
-                                             for index in range(len(Amity.space))
-                                             if Amity.space[index]['room_gender'].upper() == 'M' and
-                                             Amity.space[index]['capacity'] > Amity.space[index]['occupancy']]
 
-                    available_female_spaces = [{'index': index, 'room_id': Amity.space[index]['room_id']}
-                                               for index in range(len(Amity.space))
-                                               if Amity.space[index]['room_gender'].upper() == 'F' and
-                                               Amity.space[index]['capacity'] > Amity.space[index]['occupancy']]
+                else:
+                    # Check for available living spaces then randomly select a
+                    # space to allocate
+                    available_male_spaces = [{'index': index, 'room_id': spaces['room_id']}
+                                             for index, spaces in enumerate(Amity.space)
+                                             if spaces['room_gender'].upper() == 'M' and
+                                             spaces['capacity'] > spaces['occupancy']]
+
+                    available_female_spaces = [{'index': index, 'room_id': spaces['room_id']}
+                                               for index, spaces in enumerate(Amity.space)
+                                               if spaces['room_gender'].upper() == 'F' and
+                                               spaces['capacity'] > spaces['occupancy']]
 
                     # Allocate living space
                     if (available_male_spaces or available_female_spaces):
@@ -369,7 +388,7 @@ class Amity(object):
                                     {'person_id': person_id_to_allocate, 'room_id': space_to_allocate['room_id']})
 
                                 print (
-                                    '\n{} has been allocated to Living Space'.format(person_name))
+                                    '{} has been allocated to Living Space'.format(person_name))
 
                                 # Update the number of the randomly selected living
                                 # space occupants
@@ -393,7 +412,7 @@ class Amity(object):
                                     {'person_id': person_id_to_allocate, 'room_id': space_to_allocate['room_id']})
 
                                 print (
-                                    '\n{} has been allocated to Living Space'.format(person_name))
+                                    '{} has been allocated to Living Space'.format(person_name))
 
                                 # Update the number of the randomly selected living space
                                 # occupants
@@ -426,13 +445,15 @@ class Amity(object):
                     Amity.allocate_room(self, person_id)
 
                 else:
-                    print (found_people)
+                    return (found_people)
 
             else:
                 unallocated_persons = Amity.find_unallocated(self)
-                prev_len = len(unallocated_persons)
 
-                if isinstance(unallocated_persons, list):
+                if not unallocated_persons:
+                    return ('No pending allocations\n')
+
+                elif isinstance(unallocated_persons, list):
                     # If there are unallocated people, allocate them to a
                     # random room
                     for people in unallocated_persons:
@@ -465,12 +486,13 @@ class Amity(object):
                 new_room_gender = found_rooms['details']['room_gender']
 
                 # Check if the room is avaiable
-                available_room_list = [{'index': index, 'room_id': Amity.room[index]['room_id']}
-                                       for index in range(len(Amity.room))
-                                       if Amity.room[index]['capacity'] > Amity.room[index]['occupancy']]
 
-                available_rooms_ids = [available_room_list[index]['room_id']
-                                       for index in range(len(available_room_list))]
+                available_room_list = [{'index': index, 'room_id': rooms['room_id']}
+                                       for index, rooms in enumerate(Amity.room)
+                                       if rooms['capacity'] > rooms['occupancy']]
+
+                available_rooms_ids = [rooms['room_id']
+                                       for rooms in available_room_list]
 
                 if room_id_to_reallocate not in available_rooms_ids:
                     return ('{0} is not available'.format(new_room_name))
@@ -481,9 +503,9 @@ class Amity(object):
                     person_gender = found_people['details']['person_gender']
                     role = found_people['details']['role']
 
-                    found_allocations = [{'index': index, 'room_id': Amity.allocation[index]['room_id']}
-                                         for index in range(len(Amity.allocation))
-                                         if Amity.allocation[index]['person_id'] == person_id_to_reallocate]
+                    found_allocations = [{'index': index, 'room_id': allocations['room_id']}
+                                         for index, allocations in enumerate(Amity.allocation)
+                                         if allocations['person_id'] == person_id_to_reallocate]
 
                     if not found_allocations:
                         return (
@@ -492,14 +514,14 @@ class Amity(object):
                     else:
                         if new_room_type == 'office':
 
-                            new_office_index = [index for index in range(len(Amity.office))
-                                                if Amity.office[index]['room_id'] == room_id_to_reallocate][0]
+                            new_office_index = [index for index, offices in enumerate(Amity.office)
+                                                if offices['room_id'] == room_id_to_reallocate][0]
 
-                            office_ids = [Amity.office[index]['room_id']
-                                          for index in range(len(Amity.office))]
+                            office_ids = [offices['room_id']
+                                          for offices in Amity.office]
 
-                            prev_allocated_office = [found_allocations[index] for index in range(len(found_allocations))
-                                                     if found_allocations[index]['room_id'] in office_ids]
+                            prev_allocated_office = [allocations for allocations in found_allocations
+                                                     if allocations['room_id'] in office_ids]
 
                             if not prev_allocated_office:
                                 return ('No {0} allocations available for {1}'.format(new_room_type, person_name))
@@ -534,10 +556,14 @@ class Amity(object):
                             space_ids = [Amity.space[index]['room_id']
                                          for index in range(len(Amity.space))]
 
-                            new_space_index = [index for index in range(len(Amity.space))
-                                               if Amity.space[index]['room_id'] == room_id_to_reallocate][0]
-                            prev_allocated_space = [found_allocations[index] for index in range(len(found_allocations))
-                                                    if found_allocations[index]['room_id'] in space_ids]
+                            space_ids = [spaces['room_id']
+                                         for spaces in Amity.space]
+
+                            new_space_index = [index for index, spaces in enumerate(Amity.space)
+                                               if spaces['room_id'] == room_id_to_reallocate][0]
+
+                            prev_allocated_space = [allocations for allocations in found_allocations
+                                                    if allocations['room_id'] in space_ids]
 
                             if role == 'Staff':
                                 return(
@@ -556,9 +582,9 @@ class Amity(object):
                                         prev_allocated_space_index = prev_allocated_space[0]['index']
                                         prev_allocated_space_id = prev_allocated_space[0]['room_id']
 
-                                        prev_space = [{'index': index, 'details': Amity.space[index]}
-                                                      for index in range(len(Amity.space))
-                                                      if Amity.space[index]['room_id'] == prev_allocated_space_id][0]
+                                        prev_space = [{'index': index, 'details': spaces}
+                                                      for index, spaces in enumerate(Amity.space)
+                                                      if spaces['room_id'] == prev_allocated_space_id][0]
 
                                         prev_room_name = prev_space['details']['room_name']
                                         prev_room_index = prev_space['index']
@@ -632,10 +658,10 @@ class Amity(object):
             reg_str = re.compile(
                 r'\b' + re.escape(person_to_search) + r'\b')
 
-            found_matches = [{'index': index, 'details': Amity.person[index]}
-                             for index in range(len(Amity.person))
-                             if reg_str.search(str(Amity.person[index]['person_id'])) or
-                             (reg_str.search(Amity.person[index]['person_name']) and Amity.person[index]['person_name'] == person_to_search)]
+            found_matches = [{'index': index, 'details': people}
+                             for index, people in enumerate(Amity.person)
+                             if reg_str.search(str(people['person_id'])) or
+                             (reg_str.search(people['person_name']) and people['person_name'] == person_to_search)]
 
             if not found_matches:
                 return ("No entry found for person with ID or name {0}".format(
@@ -679,43 +705,42 @@ class Amity(object):
             person_role_to_delete = found_matches['details']['role']
             person_name_to_delete = found_matches['details']['person_name']
 
-            found_allocations = [{'index': index, 'room_id': Amity.allocation[index]['room_id']}
-                                 for index in range(len(Amity.allocation))
-                                 if Amity.allocation[index]['person_id'] == person_id_to_delete]
+            found_allocations = [{'index': index, 'room_id': value['room_id']}
+                                 for index, value in enumerate(Amity.allocation)
+                                 if value['person_id'] == person_id_to_delete]
 
             # Update the current room occupancy by -1
-            office_ids = [Amity.office[index]['room_id']
-                          for index in range(len(Amity.office))]
-            space_ids = [Amity.space[index]['room_id']
-                         for index in range(len(Amity.space))]
+            office_ids = [offices['room_id'] for offices in Amity.office]
+            space_ids = [spaces['room_id'] for spaces in Amity.space]
 
             if found_allocations:
                 # UPDATE the occupancy for OFFICE person was allocated
-                prev_allocated_office = [found_allocations[index] for index in range(
-                    len(found_allocations)) if found_allocations[index]['room_id'] in office_ids]
+
+                prev_allocated_office = [allocation_details for allocation_details in found_allocations
+                                         if allocation_details['room_id'] in office_ids]
 
                 if prev_allocated_office:
                     prev_allocated_office_index = prev_allocated_office[0]['index']
                     prev_allocated_office_id = prev_allocated_office[0]['room_id']
 
-                    prev_office = [{'index': index, 'details': Amity.office[index]}
-                                   for index in range(len(Amity.office))
-                                   if Amity.office[index]['room_id'] == prev_allocated_office_id][0]
+                    prev_office = [{'index': index, 'details': value}
+                                   for index, value in enumerate(Amity.office)
+                                   if value['room_id'] == prev_allocated_office_id][0]
 
                     prev_office_index = prev_office['index']
                     Amity.office[prev_office_index]['occupancy'] -= 1
 
                 # UPDATE the occupancy for LIVING SPACE person was allocated
-                prev_allocated_space = [found_allocations[index] for index in range(
-                    len(found_allocations)) if found_allocations[index]['room_id'] in space_ids]
+                prev_allocated_space = [allocation_details for allocation_details in found_allocations
+                                        if allocation_details['room_id'] in space_ids]
 
                 if prev_allocated_space:
                     prev_allocated_space_index = prev_allocated_space[0]['index']
                     prev_allocated_space_id = prev_allocated_space[0]['room_id']
 
-                    prev_space = [{'index': index, 'details': Amity.space[index]}
-                                  for index in range(len(Amity.space))
-                                  if Amity.space[index]['room_id'] == prev_allocated_space_id][0]
+                    prev_space = [{'index': index, 'details': spaces}
+                                  for index, spaces in enumerate(Amity.space)
+                                  if spaces['room_id'] == prev_allocated_space_id][0]
 
                     prev_space_index = prev_space['index']
                     Amity.space[prev_space_index]['occupancy'] -= 1
@@ -726,18 +751,19 @@ class Amity(object):
                 found_allocations_index = [item['index']
                                            for item in found_allocations]
 
-                Amity.allocation = [Amity.allocation[index] for index in range(
-                    len(Amity.allocation)) if index not in found_allocations_index]
+                Amity.allocation = [allocations for index, allocations in enumerate(Amity.allocation)
+                                    if index not in found_allocations_index]
 
             # Delete the person in the specific dictionary
             if person_role_to_delete == 'Staff':
-                index_in_staff_dict = [index for index in range(len(Amity.staff))
-                                       if Amity.staff[index]['person_id'] == person_id_to_delete][0]
+                index_in_staff_dict = [index for index, people in enumerate(
+                    Amity.staff) if people['person_id'] == person_id_to_delete][0]
                 del Amity.staff[index_in_staff_dict]
 
             elif person_role_to_delete == 'Fellow':
-                index_in_fellow_dict = [index for index in range(len(Amity.fellow))
-                                        if Amity.fellow[index]['person_id'] == person_id_to_delete][0]
+
+                index_in_fellow_dict = [index for index, people in enumerate(
+                    Amity.fellow) if people['person_id'] == person_id_to_delete][0]
                 del Amity.fellow[index_in_fellow_dict]
 
             else:
@@ -745,7 +771,7 @@ class Amity(object):
 
             Amity.person = Amity.fellow + Amity.staff
 
-            # Check if delete is successful
+            # Check if delete == successful
             found_matches = Amity.search_person(self, person_to_delete)
             if isinstance(found_matches, str):
                 return ('{} has been deleted successfully'.format(person_name_to_delete))
@@ -766,17 +792,18 @@ class Amity(object):
             room_name = found_rooms['details']['room_name']
             room_index = found_rooms['index']
 
-            found_allocations = [Amity.allocation[index]['room_id'] for index in range(len(Amity.allocation))
-                                 if Amity.allocation[index]['room_id'] == room_id]
+            found_allocations = [allocations['room_id'] for allocations in Amity.allocation
+                                 if allocations['room_id'] == room_id]
 
             if not found_allocations:
                 return ('There are no allocations for {0}'.format(room_name))
             else:
-                persons_in_room = [Amity.allocation[index]['person_id']
-                                   for index in range(len(Amity.allocation))
-                                   if Amity.allocation[index]['room_id'] == room_id]
-                person_name = [Amity.person[index]['person_name'] for index in range(len(Amity.person))
-                               if Amity.person[index]['person_id'] in persons_in_room]
+                persons_in_room = [allocations['person_id']
+                                   for allocations in Amity.allocation
+                                   if allocations['room_id'] == room_id]
+
+                person_name = sorted(
+                    [people['person_name'] for people in Amity.person if people['person_id'] in persons_in_room])
 
                 headers = ['Person Name']
                 print(tabulate([[name] for name in person_name],
@@ -793,29 +820,43 @@ class Amity(object):
         # Find peeoplw not allocated living space
         living_spaces_list = [spaces['room_id'] for spaces in Amity.space]
 
-        fellows_need_accommodation = [Amity.person[index]['person_id'] for index in range(len(Amity.person))
-                                      if Amity.person[index]['wants_accommodation'] == 'Y']
+        # fellows_need_accommodation = [Amity.person[index]['person_id'] for index in range(len(Amity.person))
+        # if Amity.person[index]['wants_accommodation'] == 'Y']
 
-        fellows_allocated_living_space = [Amity.allocation[index]['person_id'] for index in range(len(Amity.allocation))
-                                          if Amity.allocation[index]['room_id'] in living_spaces_list]
+        fellows_need_accommodation = [people['person_id'] for people in Amity.person
+                                      if people['wants_accommodation'] == 'Y']
+
+        # fellows_allocated_living_space = [Amity.allocation[index]['person_id'] for index in range(len(Amity.allocation))
+        # if Amity.allocation[index]['room_id'] in living_spaces_list]
+
+        fellows_allocated_living_space = [allocations['person_id'] for allocations in Amity.allocation
+                                          if allocations['room_id'] in living_spaces_list]
 
         fellows_ids_not_allocated_space = list(
             set(fellows_need_accommodation) - set(fellows_allocated_living_space))
 
-        fellows_not_allocated_space = [{'person_id': Amity.person[index]['person_id'],
-                                        'person_name':Amity.person[index]['person_name'],
+        # fellows_not_allocated_space = [{'person_id': Amity.person[index]['person_id'],
+        #                                 'person_name':Amity.person[index]['person_name'],
+        #                                 'Unallocated':'Living Space'}
+        #                                for index in range(len(Amity.person))
+        # if Amity.person[index]['person_id'] in
+        # fellows_ids_not_allocated_space]
+
+        fellows_not_allocated_space = [{'person_id': people['person_id'],
+                                        'person_name':people['person_name'],
                                         'Unallocated':'Living Space'}
-                                       for index in range(len(Amity.person))
-                                       if Amity.person[index]['person_id'] in fellows_ids_not_allocated_space]
+                                       for people in Amity.person
+                                       if people['person_id'] in fellows_ids_not_allocated_space]
 
         # Find people who have no office allocated
-        office_list = [Amity.office[index]['room_id']
-                       for index in range(len(Amity.office))]
+        office_list = [offices['room_id'] for offices in Amity.office]
+        all_people = [people['person_id'] for people in Amity.person]
 
-        all_people = [Amity.person[index]['person_id']
-                      for index in range(len(Amity.person))]
-        people_allocated_office = [Amity.allocation[index]['person_id'] for index in range(len(Amity.allocation))
-                                   if Amity.allocation[index]['room_id'] in office_list]
+        # people_allocated_office = [Amity.allocation[index]['person_id'] for index in range(len(Amity.allocation))
+        # if Amity.allocation[index]['room_id'] in office_list]
+
+        people_allocated_office = [allocations['person_id'] for allocations in Amity.allocation
+                                   if allocations['room_id'] in office_list]
 
         people_ids_not_allocated_office = list(
             set(all_people) - set(people_allocated_office))
@@ -837,11 +878,11 @@ class Amity(object):
         # List of people without only office allocation
         not_allocated_office_id = list(
             set(people_ids_not_allocated_office) - set(unallocated_both_office_and_space))
-        people_unallocated_office = [{'person_id': Amity.person[index]['person_id'],
-                                      'person_name':Amity.person[index]['person_name'],
+        people_unallocated_office = [{'person_id': people['person_id'],
+                                      'person_name':people['person_name'],
                                       'Unallocated':'Office'}
-                                     for index in range(len(Amity.person))
-                                     if Amity.person[index]['person_id'] in not_allocated_office_id]
+                                     for people in Amity.person
+                                     if people['person_id'] in not_allocated_office_id]
 
         # List with details of pending allocations
         people_unallocated = fellows_not_allocated_space + people_unallocated_office

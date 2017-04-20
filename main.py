@@ -23,11 +23,10 @@
     -i, --interactive   Interactive Mode
     -h, --help Show on this screen and then exit
     --version   Show version and exit
-    -o=filename]    Specify output file
+    -o=filename    Specify output file
     --db=database_name Database to save session data
  """
 
-import argparse
 import cmd
 import os
 import sys
