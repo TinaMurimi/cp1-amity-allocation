@@ -15,6 +15,7 @@ allocation.txt
 .cache/*
 models/config.py
 models/database.ini
+models/create_tables.py
 Unallocated.txt
 person.txt
 models/amity2.py

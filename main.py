@@ -170,7 +170,7 @@ class AmityApp(cmd.Cmd):
         if not args['<person_identifier>']:
             args['<person_identifier>'] = ''
 
-        print (Amity.allocate_unallocated(self, args['<person_identifier>']))
+        Amity.allocate_unallocated(self, args['<person_identifier>'])
 
     @docopt_cmd
     def do_reallocate_person(self, args):

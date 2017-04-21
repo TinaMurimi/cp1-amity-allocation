@@ -4,11 +4,13 @@ import random
 import re
 import string
 
+from colorama import *
 from operator import itemgetter
 from sqlalchemy import create_engine, exc
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import sessionmaker
 from tabulate import tabulate
+from termcolor import colored, cprint
 
 from models.person import Staff, Fellow
 from models.room import LivingSpace, Office
@@ -39,8 +41,8 @@ class Amity(object):
             room_gender = 'N'
 
         if room_gender.title() not in ('Male', 'Female', 'M', 'F', 'N'):
-            return(
-                'Use Male or Female to specify gender that will occupy room')
+            return colored(
+                'Use Male or Female to specify gender that will occupy room', 'red')
 
         else:
             if rooms_to_add:
@@ -59,23 +61,23 @@ class Amity(object):
                 invalid_name = [name for name in rooms_to_add[0]
                                 if pattern.search(name) or re.search('\d', name)]
                 if invalid_name:
-                    return ('A room name cannot contain numbers or special characters: {}'.format(', '.join(invalid_name)))
+                    return colored('A room name cannot contain numbers or special characters: {}'.format(', '.join(invalid_name)), 'red')
 
                 for room_name in rooms_to_add[0]:
                     room_name = room_name.strip().title()
                     found_matches = Amity.search_room(self, room_name)
 
                     if isinstance(found_matches, dict) and found_matches:
-                        return ('Room already exists')
+                        return colored('Room already exists', 'red')
 
                     else:
                         if room_type not in ['office', 'space', 'living space']:
-                            return ('A room can either be an OFFICE or a LIVING SPACE')
+                            return colored('A room can either be an OFFICE or a LIVING SPACE', 'red')
 
                         elif room_type == 'office':
                             if room_gender != 'N':
-                                return(
-                                    'An office can be occupied by both male and female')
+                                return colored(
+                                    'An office can be occupied by both male and female', 'red')
                             else:
                                 new_office = Office(room_name)
 
@@ -86,13 +88,13 @@ class Amity(object):
                                                      'room_gender': new_office.room_gender.upper(),
                                                      'occupancy': new_office.occupancy})
 
-                                print ('{0} added successfully with ID {1}'.format(
-                                    new_office.room_name, new_room_id))
+                                cprint ('{0} added successfully with ID {1}'.format(
+                                    new_office.room_name, new_room_id), 'green')
 
                         elif room_type == 'space' or room_type == 'living space':
                             if room_gender == 'N':
-                                return(
-                                    'Please specify if the living space is for male or female')
+                                return colored(
+                                    'Please specify if the living space is for male or female', 'red')
                             else:
                                 new_space = LivingSpace(room_name, room_gender)
 
@@ -103,8 +105,8 @@ class Amity(object):
                                                     'room_gender': new_space.room_gender.upper(),
                                                     'occupancy': new_space.occupancy})
 
-                                print ('{0} added successfully with ID {1}'.format(
-                                    new_space.room_name, new_room_id))
+                                cprint ('{0} added successfully with ID {1}'.format(
+                                    new_space.room_name, new_room_id), 'green')
 
                         else:
                             print ('ROOM TYPE WITH WRONG FORMAT')
@@ -112,14 +114,14 @@ class Amity(object):
                         new_room_id += 1
 
             else:
-                return ('Room no rooms to add')
+                return colored('No rooms to add', 'yellow')
 
         Amity.room = Amity.office + Amity.space
 
         if len(Amity.room) - prev_no_of_rooms != len(rooms_to_add[0]):
-            return ('Rooms not added')
+            return colored('Rooms not added', 'red')
         else:
-            return ('{} rooms added successfully'.format(len(rooms_to_add[0])))
+            return colored('{} rooms added successfully'.format(len(rooms_to_add[0])), 'green')
 
     def search_room(self, room_to_search):
         """Search if a room exists using the room name or room ID"""
@@ -138,13 +140,13 @@ class Amity(object):
                              or reg_str.search(value['room_name'])]
 
             if not found_matches:
-                return ("No entry found for room with ID or name {0}".format(
-                    room_to_search.title()))
+                return colored("No entry found for room with ID or name {0}".format(
+                    room_to_search.title()), 'yellow')
             else:
                 return found_matches[0]
 
         else:
-            return ('Ínvalid input')
+            return colored('Invalid input', 'red')
 
     def list_rooms(self):
         """List the details of all rooms created or loaded from DB"""
@@ -156,10 +158,10 @@ class Amity(object):
             Amity.room, key=itemgetter('room_id'))
 
         if not list_of_rooms:
-            print ('No rooms to list. Create them first')
+            cprint ('No rooms to list. Create them first', 'yellow')
         else:
-            print(tabulate([item.values() for item in list_of_rooms],
-                           headers=headers, tablefmt='fancy_grid'))
+            cprint(tabulate([item.values() for item in list_of_rooms],
+                           headers=headers, tablefmt='fancy_grid'), 'cyan')
 
     def delete_room(self, room_to_delete):
         """Delete a room and allocations to the room"""
@@ -192,10 +194,10 @@ class Amity(object):
             # Check if delete is successful
             found_matches = Amity.search_room(self, room_to_delete)
             if isinstance(found_matches, str):
-                return ('{} has been deleted successfully'.format(
-                    room_name_to_delete))
+                return colored('{} has been deleted successfully'.format(
+                    room_name_to_delete), 'green')
             else:
-                return ('{} has NOT deleted'.format(room_name_to_delete))
+                return colored('{} has NOT deleted'.format(room_name_to_delete), 'red')
 
         else:
             return (found_matches)
@@ -213,14 +215,14 @@ class Amity(object):
         invalid_name = [name for name in person_name if pattern.search(
             name) or re.search('\d', name)]
         if invalid_name:
-            return ("Person's name, {}, cannot contain numbers or special characters".format(person_name))
+            return colored("Person's name, {}, cannot contain numbers or special characters".format(person_name), 'red')
 
         if role.title() not in ['Staff', 'Fellow']:
-            return (
-                'A person can either have the role STAFF or FELLOW')
+            return colored(
+                'A person can either have the role STAFF or FELLOW', 'red')
 
         if person_gender[0].upper() not in ('M', 'F'):
-            return ('Use Male, M, Female, F to specify gender')
+            return colored('Use Male, M, Female, F to specify gender', 'red')
         else:
             person_gender = person_gender[0].upper()
 
@@ -228,15 +230,15 @@ class Amity(object):
             wants_accommodation = 'N'
         else:
             if wants_accommodation[0].upper() not in ('Y', 'N'):
-                return (
-                    'Use Yes, Y, No, N to specify if a person wants accommodation or not')
+                return colored(
+                    'Use Yes, Y, No, N to specify if a person wants accommodation or not', 'red')
 
         # Check if person already exists before adding them
         found_people = Amity.search_person(self, person_name)
 
         if found_people and isinstance(found_people, list):
-            return ('{} already exists. Add an initial to differentiate the names'.format(
-                person_name))
+            return colored('{} already exists. Add an initial to differentiate the names'.format(
+                person_name),'red')
 
         else:
             Amity.person = Amity.fellow + Amity.staff
@@ -250,7 +252,7 @@ class Amity(object):
 
             if role == 'Staff':
                 if wants_accommodation != 'N':
-                    return ('Staff cannot be allocated living spaces')
+                    return colored('Staff cannot be allocated living spaces', 'red')
                 else:
                     new_staff = Staff(person_name, person_gender)
 
@@ -260,8 +262,8 @@ class Amity(object):
                                         'role': new_staff.role.title(),
                                         'wants_accommodation': wants_accommodation})
 
-                    print ('\n{0} added successfully with ID {1}'.format(
-                        new_staff.person_name, new_person_id))
+                    cprint('\n{0} added successfully with ID {1}'.format(
+                        new_staff.person_name, new_person_id), 'green')
 
                     # Allocate Office and Living Space
                     Amity.allocate_room(self, new_person_id)
@@ -276,8 +278,8 @@ class Amity(object):
                                      'role': new_fellow.role.title(),
                                      'wants_accommodation': new_fellow.wants_accommodation})
 
-                print ('\n{0} added successfully with ID {1}'.format(
-                    new_fellow.person_name, new_person_id))
+                cprint ('\n{0} added successfully with ID {1}'.format(
+                    new_fellow.person_name, new_person_id), 'green')
 
                 # Allocate Office and Living Space
                 Amity.allocate_room(self, new_person_id)
@@ -285,16 +287,16 @@ class Amity(object):
             Amity.person = Amity.fellow + Amity.staff
 
             if len(Amity.person) - prev_no_of_people != 1:
-                return ('Person not added!')
+                return colored('Person not added!', 'red')
 
             else:
                 # Check a person has been allocated rooms
                 found_allocations = [
                     allocations for allocations in Amity.allocation if allocations['person_id'] == new_person_id]
                 if found_allocations:
-                    return ('Person added and allocated room')
+                    return colored('Person added and allocated room', 'green')
                 else:
-                    return ('Person added but not allocated (all) rooms')
+                    return colored('Person added but not allocated (all) rooms', 'yellow')
 
     def allocate_room(self, person_id_to_allocate):
         """Allocates person to an office and living space"""
@@ -320,7 +322,7 @@ class Amity(object):
                       for space_details in Amity.space]
 
         if found_allocations and (set(found_room) & set(all_offices)):
-            return ('Person already allocated office')
+            msg = 'Person already allocated office'
 
         else:
             # Check for available office then randomly select an office to
@@ -329,14 +331,14 @@ class Amity(object):
                                      if offices['capacity'] > offices['occupancy']]
 
             if not available_office_list or not Amity.office:
-                print ('No offices to allocate')
+                cprint ('No offices to allocate', 'yellow')
             else:
                 # Allocate office
                 office_to_allocate = random.choice(available_office_list)
                 Amity.allocation.append(
                     {'person_id': person_id_to_allocate, 'room_id': office_to_allocate['room_id']})
 
-                print ('{} has been allocated to office'.format(person_name))
+                cprint ('\n{} has been allocated to office'.format(person_name), 'green')
 
                 # Update the number of the randomly selected office occupants
                 prev_occupancy = Amity.office[office_to_allocate['index']]['occupancy']
@@ -347,12 +349,12 @@ class Amity(object):
 
         # Allocate living space
         if found_allocations and (set(found_room) & set(all_spaces)):
-            return ('Person already allocated living space')
+            msg = 'Person already allocated living space'
 
         else:
             if wants_accommodation == 'Y':
                 if not Amity.space:
-                    print ('No living spaces to allocate')
+                    cprint ('No living spaces to allocate', 'yellow')
 
                 else:
                     # Check for available living spaces then randomly select a
@@ -371,8 +373,8 @@ class Amity(object):
                     if (available_male_spaces or available_female_spaces):
                         if person_gender == 'M':
                             if not available_male_spaces:
-                                print (
-                                    'No available male living spaces to allocate')
+                                cprint (
+                                    'No available male living spaces to allocate', 'yellow')
                             else:
                                 space_to_allocate = random.choice(
                                     available_male_spaces)
@@ -382,8 +384,8 @@ class Amity(object):
                                 Amity.allocation.append(
                                     {'person_id': person_id_to_allocate, 'room_id': space_to_allocate['room_id']})
 
-                                print (
-                                    '{} has been allocated to Living Space'.format(person_name))
+                                cprint (
+                                    '\n{} has been allocated to Living Space'.format(person_name), 'green')
 
                                 # Update the number of the randomly selected living
                                 # space occupants
@@ -395,8 +397,8 @@ class Amity(object):
 
                         elif person_gender == 'F':
                             if not available_female_spaces:
-                                print (
-                                    'No available female living spaces to allocate')
+                                cprint (
+                                    'No available female living spaces to allocate', 'yellow')
                             else:
                                 space_to_allocate = random.choice(
                                     available_female_spaces)
@@ -406,8 +408,8 @@ class Amity(object):
                                 Amity.allocation.append(
                                     {'person_id': person_id_to_allocate, 'room_id': space_to_allocate['room_id']})
 
-                                print (
-                                    '{} has been allocated to Living Space'.format(person_name))
+                                cprint (
+                                    '{} has been allocated to Living Space'.format(person_name), 'green')
 
                                 # Update the number of the randomly selected living space
                                 # occupants
@@ -423,15 +425,15 @@ class Amity(object):
         # Check if the person exists
 
         if not Amity.room:
-            return ('\nNo existing rooms')
+            return colored('No existing rooms', 'yellow')
 
         else:
             if person_to_alocate != '':
                 found_people = Amity.search_person(self, person_to_alocate)
 
                 if isinstance(found_people, list) and len(found_people) > 1:
-                    return ('There is more than one person with the name {0}.\
-                            Please view the list of all people and use their ID instead'.format(person_to_alocate.title()))
+                    return colored('There is more than one person with the name {0}.\
+                            Please view the list of all people and use their ID instead'.format(person_to_alocate.title()), 'yellow')
 
                 elif isinstance(found_people, list) and len(found_people) == 1:
                     found_people = found_people[0]
@@ -445,7 +447,7 @@ class Amity(object):
                 unallocated_persons = Amity.find_unallocated(self)
 
                 if not unallocated_persons:
-                    return ('No pending allocations\n')
+                    return colored('No pending allocations\n', 'yellow')
 
                 elif isinstance(unallocated_persons, list):
                     # If there are unallocated people, allocate them to a
@@ -461,8 +463,8 @@ class Amity(object):
         found_people = Amity.search_person(self, person_to_reallocate)
 
         if isinstance(found_people, list) and len(found_people) > 1:
-            return ('There is more than one person with the name {0}.\
-                    Please view the list of all people and use their ID instead'.format(person_to_reallocate.title()))
+            return colored('There is more than one person with the name {0}.\
+                    Please view the list of all people and use their ID instead'.format(person_to_reallocate.title()), 'yellow')
 
         elif isinstance(found_people, list) and len(found_people) == 1:
 
@@ -489,7 +491,7 @@ class Amity(object):
                                        for rooms in available_room_list]
 
                 if room_id_to_reallocate not in available_rooms_ids:
-                    return ('{0} is not available'.format(new_room_name))
+                    return colored('{0} is not available'.format(new_room_name), 'red')
 
                 else:
                     person_id_to_reallocate = found_people['details']['person_id']
@@ -502,8 +504,8 @@ class Amity(object):
                                          if allocations['person_id'] == person_id_to_reallocate]
 
                     if not found_allocations:
-                        return (
-                            'No allocations available for {0}'.format(person_name))
+                        return colored(
+                            'No allocations available for {0}'.format(person_name), 'yellow')
 
                     else:
                         if new_room_type == 'office':
@@ -518,7 +520,7 @@ class Amity(object):
                                                      if allocations['room_id'] in office_ids]
 
                             if not prev_allocated_office:
-                                return ('No {0} allocations available for {1}'.format(new_room_type, person_name))
+                                return colored('No {0} allocations available for {1}'.format(new_room_type, person_name), 'yellow')
 
                             else:
                                 prev_allocated_office_index = prev_allocated_office[0]['index']
@@ -543,8 +545,8 @@ class Amity(object):
                                     Amity.office[prev_room_index]['occupancy'] -= 1
                                     Amity.office[new_office_index]['occupancy'] += 1
 
-                                    return ('{0} has been reallocated office from {1} to {2}'.format(
-                                        person_name, prev_room_name, new_room_name))
+                                    return colored('{0} has been reallocated office from {1} to {2}'.format(
+                                        person_name, prev_room_name, new_room_name), 'green')
 
                         elif new_room_type == 'space':
                             space_ids = [Amity.space[index]['room_id']
@@ -560,17 +562,17 @@ class Amity(object):
                                                     if allocations['room_id'] in space_ids]
 
                             if role == 'Staff':
-                                return(
-                                    'Staff cannot be allocated living spaces')
+                                return colored(
+                                    'Staff cannot be allocated living spaces', 'red')
 
                             else:
                                 if new_room_gender != person_gender:
-                                    return('A person of gender {0} is being allocated to a living space for {1}'.format(
-                                        person_gender, new_room_gender))
+                                    return colored('A person of gender {0} is being allocated to a living space for {1}'.format(
+                                        person_gender, new_room_gender), 'red')
 
                                 else:
                                     if not prev_allocated_space:
-                                        return ('No {0} allocations available for {1}'.format(new_room_type, person_name))
+                                        return colored('No {0} allocations available for {1}'.format(new_room_type, person_name), 'yellow')
 
                                     else:
                                         prev_allocated_space_index = prev_allocated_space[0]['index']
@@ -585,8 +587,8 @@ class Amity(object):
 
                                         # Reallocate space
                                         if prev_allocated_space_id == room_id_to_reallocate:
-                                            return ('{0} is already allocated to {1}'.format(
-                                                person_name, prev_room_name))
+                                            return colored('{0} is already allocated to {1}'.format(
+                                                person_name, prev_room_name), 'green')
 
                                         else:
                                             Amity.allocation[prev_allocated_space_index] = {
@@ -596,16 +598,16 @@ class Amity(object):
                                             Amity.space[prev_room_index]['occupancy'] -= 1
                                             Amity.space[new_space_index]['occupancy'] += 1
 
-                                            return ('{0} has been reallocated living space from {1} to {2}'.format(
-                                                person_name, prev_room_name, new_room_name))
+                                            return colored('{0} has been reallocated living space from {1} to {2}'.format(
+                                                person_name, prev_room_name, new_room_name), 'green')
 
                         Amity.room = Amity.office + Amity.space
 
             else:
-                return (found_rooms)
+                return colored(found_rooms, 'yellow')
 
         else:
-            return (found_people)
+            return colored(found_people, 'yellow')
 
     def load_people(self):
         """Adds people to rooms from a txt file"""
@@ -619,7 +621,7 @@ class Amity(object):
                 people = myfile.readlines()
 
             if not people:
-                print ('The file is empty')
+                cprint ('The file is empty', 'red')
             else:
                 for person in people:
                     data = person.lower().split()
@@ -635,9 +637,9 @@ class Amity(object):
                                      role, wants_accommodation)
 
             if len(Amity.person) - prev_no_of_people != len(people):
-                return ('People not loaded!')
+                return colored('People not loaded!', 'red')
             else:
-                return ('{} people loaded!'.format(len(people)))
+                return colored('{} people loaded!'.format(len(people)), 'green')
 
         else:
             raise FileNotFoundError('File does not exist')
@@ -658,13 +660,13 @@ class Amity(object):
                              (reg_str.search(people['person_name']) and people['person_name'] == person_to_search)]
 
             if not found_matches:
-                return ("No entry found for person with ID or name {0}".format(
-                    person_to_search.title()))
+                return colored("No entry found for person with ID or name {0}".format(
+                    person_to_search.title()), 'yellow')
             else:
                 return found_matches
 
         else:
-            return ('Ínvalid input')
+            return colored('Invalid input', 'red')
 
     def list_people(self):
         """List the details of all people created or loaded from DB"""
@@ -675,11 +677,11 @@ class Amity(object):
             Amity.person, key=itemgetter('person_id'))
 
         if not list_of_people:
-            print ('No people to list. Create or load first')
+            cprint ('No people to list. Create or load first', 'yellow')
 
         else:
-            print(tabulate([item.values() for item in list_of_people],
-                           headers=headers, tablefmt='fancy_grid'))
+            cprint(tabulate([item.values() for item in list_of_people],
+                           headers=headers, tablefmt='fancy_grid'), 'cyan')
 
     def delete_person(self, person_to_delete):
         """Delete a person and allocations for the person"""
@@ -687,8 +689,8 @@ class Amity(object):
         found_matches = Amity.search_person(self, person_to_delete)
 
         if isinstance(found_matches, list) and len(found_matches) > 1:
-            return ('There is more than one person with the name {0}.\
-            Please view the list of all people and use their ID instead'.format(person_to_delete.title()))
+            return colored('There is more than one person with the name {0}.\
+            Please view the list of all people and use their ID instead'.format(person_to_delete.title()), 'yellow')
 
         elif isinstance(found_matches, list) and len(found_matches) == 1:
 
@@ -765,9 +767,9 @@ class Amity(object):
             # Check if delete == successful
             found_matches = Amity.search_person(self, person_to_delete)
             if isinstance(found_matches, str):
-                return ('{} has been deleted successfully'.format(person_name_to_delete))
+                return colored('{} has been deleted successfully'.format(person_name_to_delete), 'green')
             else:
-                return ('{} has NOT been deleted'.format(person_name_to_delete))
+                return colored('{} has NOT been deleted'.format(person_name_to_delete), 'red')
 
         else:
             return (found_matches)
@@ -786,7 +788,7 @@ class Amity(object):
                                  if allocations['room_id'] == room_id]
 
             if not found_allocations:
-                return ('There are no allocations for {0}'.format(room_name))
+                return colored('There are no allocations for {0}'.format(room_name), 'yellow')
             else:
                 persons_in_room = [allocations['person_id']
                                    for allocations in Amity.allocation
@@ -796,13 +798,13 @@ class Amity(object):
                     [people['person_name'] for people in Amity.person if people['person_id'] in persons_in_room])
 
                 headers = ['Person Name']
-                print(tabulate([[name] for name in person_name],
-                               headers=headers, tablefmt='fancy_grid'))
+                cprint(tabulate([[name] for name in person_name],
+                               headers=headers, tablefmt='fancy_grid'), 'cyan')
 
                 return (person_name)
 
         else:
-            print(found_rooms)
+            cprint(found_rooms, 'red')
 
     def find_unallocated(self):
         """Finds all unallocated people"""
@@ -810,27 +812,14 @@ class Amity(object):
         # Find peeoplw not allocated living space
         living_spaces_list = [spaces['room_id'] for spaces in Amity.space]
 
-        # fellows_need_accommodation = [Amity.person[index]['person_id'] for index in range(len(Amity.person))
-        # if Amity.person[index]['wants_accommodation'] == 'Y']
-
         fellows_need_accommodation = [people['person_id'] for people in Amity.person
                                       if people['wants_accommodation'] == 'Y']
-
-        # fellows_allocated_living_space = [Amity.allocation[index]['person_id'] for index in range(len(Amity.allocation))
-        # if Amity.allocation[index]['room_id'] in living_spaces_list]
 
         fellows_allocated_living_space = [allocations['person_id'] for allocations in Amity.allocation
                                           if allocations['room_id'] in living_spaces_list]
 
         fellows_ids_not_allocated_space = list(
             set(fellows_need_accommodation) - set(fellows_allocated_living_space))
-
-        # fellows_not_allocated_space = [{'person_id': Amity.person[index]['person_id'],
-        #                                 'person_name':Amity.person[index]['person_name'],
-        #                                 'Unallocated':'Living Space'}
-        #                                for index in range(len(Amity.person))
-        # if Amity.person[index]['person_id'] in
-        # fellows_ids_not_allocated_space]
 
         fellows_not_allocated_space = [{'person_id': people['person_id'],
                                         'person_name':people['person_name'],
@@ -841,9 +830,6 @@ class Amity(object):
         # Find people who have no office allocated
         office_list = [offices['room_id'] for offices in Amity.office]
         all_people = [people['person_id'] for people in Amity.person]
-
-        # people_allocated_office = [Amity.allocation[index]['person_id'] for index in range(len(Amity.allocation))
-        # if Amity.allocation[index]['room_id'] in office_list]
 
         people_allocated_office = [allocations['person_id'] for allocations in Amity.allocation
                                    if allocations['room_id'] in office_list]
@@ -887,11 +873,11 @@ class Amity(object):
         people_unallocated = Amity.find_unallocated(self)
 
         if not people_unallocated:
-            print ('All people have been allocated rooms')
+            cprint ('All people have been allocated rooms', 'yellow')
         else:
             headers = ['ID', 'Person Name', 'Pending Allocation']
-            print(tabulate([item.values() for item in people_unallocated],
-                           headers=headers, tablefmt='fancy_grid'))
+            cprint(tabulate([item.values() for item in people_unallocated],
+                           headers=headers, tablefmt='fancy_grid'), 'cyan')
 
             if unallocated_persons_file != '':
                 # Ensure that the file is created in the folder containing the
@@ -908,13 +894,13 @@ class Amity(object):
                         output_file.write(
                             str(details['person_id']) + '\t' + details['person_name'] + '\t' + details['Unallocated'] + '\n')
 
-                    print ('\nSee {0} for output'.format(file_path))
+                    cprint ('\nSee {0} for output'.format(file_path), 'green')
 
     def print_allocations(self, allocation_output_file=''):
         """Prints a list of allocations onto the screen and outputs the registered allocations to a txt file"""
 
         if not Amity.allocation:
-            print ('No allocations available')
+            cprint ('No allocations available', 'yellow')
         else:
             allocated_rooms = list(
                 set([item['room_id'] for item in Amity.allocation]))
@@ -941,10 +927,10 @@ class Amity(object):
                     output_file.writelines(room_info['room_name'] + '\n' + '------------------------------' +
                                            '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n')
 
-                    print (room_info['room_name'] + '\n' + '------------------------------' +
-                           '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n')
+                    cprint (room_info['room_name'] + '\n' + '------------------------------' +
+                           '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n', 'cyan')
 
-                print ('See {0} for output'.format(file_path))
+                cprint ('See {0} for output'.format(file_path), 'green')
                 return ('Data saved to file')
 
     def save_state(self, db_name=''):
@@ -957,7 +943,7 @@ class Amity(object):
             db_name = db_name + '.db'
 
         if not Amity.room and not Amity.person:
-            return ('No session data available\n')
+            return colored('No session data available\n', 'yellow')
 
         try:
             # Create an engine that stores data in the local directory's
@@ -966,7 +952,10 @@ class Amity(object):
             db_url = URL(**sqlite_db)
             engine = create_engine(db_url)
 
-            # Create all tables in the engine statements in raw SQL.
+            # Drop all tables if exist
+            Base.metadata.drop_all(engine)
+            
+            # Create all tables in the engine statements in raw SQL
             Base.metadata.create_all(engine)
 
             # Bind the engine to the metadata of the Base class so that the
@@ -982,10 +971,10 @@ class Amity(object):
             session.bulk_insert_mappings(Allocations, Amity.allocation)
             session.commit()
 
-            return ('Session data successfully saved to DB named: {}'.format(db_name))
+            return colored('Session data successfully saved to DB named: {}'.format(db_name), 'green')
 
         except exc.SQLAlchemyError as error:
-            return ('Error: ', error)
+            return colored('Error: ', error, 'red')
 
     def load_state(self, db_name):
         """Loads data from a database into the application"""
@@ -1020,7 +1009,7 @@ class Amity(object):
                     db_tables.append(row[0])
 
             if not db_tables:
-                return ('Tables {} do not exist'.format(', '.join(table_names)))
+                return colored('Tables {} do not exist'.format(', '.join(table_names)), 'red')
 
             else:
                 try:
@@ -1090,9 +1079,9 @@ class Amity(object):
                     after_allocation_count = len(Amity.allocation)
 
                     if (before_person_count >= after_person_count) or (before_room_count >= after_room_count) or (before_allocation_count >= after_allocation_count):
-                        return ('Not all data has not been loaded! Check missing data using list functions')
+                        return colored('Not all data has not been loaded! Check missing data using list functions','yellow')
                     else:
-                        return ('Data loaded successfully! Use the list functions to view the data')
+                        return colored('Data loaded successfully! Use the list functions to view the data', 'green')
 
                 except SQLAlchemyError as error:
-                    return ('SQLAlchemyError: ', error)
+                    return colored('SQLAlchemyError: ', error, 'red')
