@@ -232,6 +232,7 @@ class AmityApp(cmd.Cmd):
         cprint("Exiting Application. Catch you later!", "red")
         exit()
 
+
 if __name__ == "__main__":
     try:
         AmityApp().cmdloop()

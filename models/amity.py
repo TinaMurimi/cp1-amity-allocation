@@ -88,7 +88,7 @@ class Amity(object):
                                                      'room_gender': new_office.room_gender.upper(),
                                                      'occupancy': new_office.occupancy})
 
-                                cprint ('{0} added successfully with ID {1}'.format(
+                                cprint('{0} added successfully with ID {1}'.format(
                                     new_office.room_name, new_room_id), 'green')
 
                         elif room_type == 'space' or room_type == 'living space':
@@ -105,7 +105,7 @@ class Amity(object):
                                                     'room_gender': new_space.room_gender.upper(),
                                                     'occupancy': new_space.occupancy})
 
-                                cprint ('{0} added successfully with ID {1}'.format(
+                                cprint('{0} added successfully with ID {1}'.format(
                                     new_space.room_name, new_room_id), 'green')
 
                         else:
@@ -158,10 +158,10 @@ class Amity(object):
             Amity.room, key=itemgetter('room_id'))
 
         if not list_of_rooms:
-            cprint ('No rooms to list. Create them first', 'yellow')
+            cprint('No rooms to list. Create them first', 'yellow')
         else:
             cprint(tabulate([item.values() for item in list_of_rooms],
-                           headers=headers, tablefmt='fancy_grid'), 'cyan')
+                            headers=headers, tablefmt='fancy_grid'), 'cyan')
 
     def delete_room(self, room_to_delete):
         """Delete a room and allocations to the room"""
@@ -238,7 +238,7 @@ class Amity(object):
 
         if found_people and isinstance(found_people, list):
             return colored('{} already exists. Add an initial to differentiate the names'.format(
-                person_name),'red')
+                person_name), 'red')
 
         else:
             Amity.person = Amity.fellow + Amity.staff
@@ -278,7 +278,7 @@ class Amity(object):
                                      'role': new_fellow.role.title(),
                                      'wants_accommodation': new_fellow.wants_accommodation})
 
-                cprint ('\n{0} added successfully with ID {1}'.format(
+                cprint('\n{0} added successfully with ID {1}'.format(
                     new_fellow.person_name, new_person_id), 'green')
 
                 # Allocate Office and Living Space
@@ -331,14 +331,15 @@ class Amity(object):
                                      if offices['capacity'] > offices['occupancy']]
 
             if not available_office_list or not Amity.office:
-                cprint ('No offices to allocate', 'yellow')
+                cprint('No offices to allocate', 'yellow')
             else:
                 # Allocate office
                 office_to_allocate = random.choice(available_office_list)
                 Amity.allocation.append(
                     {'person_id': person_id_to_allocate, 'room_id': office_to_allocate['room_id']})
 
-                cprint ('\n{} has been allocated to office'.format(person_name), 'green')
+                cprint('\n{} has been allocated to office'.format(
+                    person_name), 'green')
 
                 # Update the number of the randomly selected office occupants
                 prev_occupancy = Amity.office[office_to_allocate['index']]['occupancy']
@@ -354,7 +355,7 @@ class Amity(object):
         else:
             if wants_accommodation == 'Y':
                 if not Amity.space:
-                    cprint ('No living spaces to allocate', 'yellow')
+                    cprint('No living spaces to allocate', 'yellow')
 
                 else:
                     # Check for available living spaces then randomly select a
@@ -373,7 +374,7 @@ class Amity(object):
                     if (available_male_spaces or available_female_spaces):
                         if person_gender == 'M':
                             if not available_male_spaces:
-                                cprint (
+                                cprint(
                                     'No available male living spaces to allocate', 'yellow')
                             else:
                                 space_to_allocate = random.choice(
@@ -384,7 +385,7 @@ class Amity(object):
                                 Amity.allocation.append(
                                     {'person_id': person_id_to_allocate, 'room_id': space_to_allocate['room_id']})
 
-                                cprint (
+                                cprint(
                                     '\n{} has been allocated to Living Space'.format(person_name), 'green')
 
                                 # Update the number of the randomly selected living
@@ -397,7 +398,7 @@ class Amity(object):
 
                         elif person_gender == 'F':
                             if not available_female_spaces:
-                                cprint (
+                                cprint(
                                     'No available female living spaces to allocate', 'yellow')
                             else:
                                 space_to_allocate = random.choice(
@@ -408,7 +409,7 @@ class Amity(object):
                                 Amity.allocation.append(
                                     {'person_id': person_id_to_allocate, 'room_id': space_to_allocate['room_id']})
 
-                                cprint (
+                                cprint(
                                     '{} has been allocated to Living Space'.format(person_name), 'green')
 
                                 # Update the number of the randomly selected living space
@@ -621,7 +622,7 @@ class Amity(object):
                 people = myfile.readlines()
 
             if not people:
-                cprint ('The file is empty', 'red')
+                cprint('The file is empty', 'red')
             else:
                 for person in people:
                     data = person.lower().split()
@@ -677,11 +678,11 @@ class Amity(object):
             Amity.person, key=itemgetter('person_id'))
 
         if not list_of_people:
-            cprint ('No people to list. Create or load first', 'yellow')
+            cprint('No people to list. Create or load first', 'yellow')
 
         else:
             cprint(tabulate([item.values() for item in list_of_people],
-                           headers=headers, tablefmt='fancy_grid'), 'cyan')
+                            headers=headers, tablefmt='fancy_grid'), 'cyan')
 
     def delete_person(self, person_to_delete):
         """Delete a person and allocations for the person"""
@@ -799,7 +800,7 @@ class Amity(object):
 
                 headers = ['Person Name']
                 cprint(tabulate([[name] for name in person_name],
-                               headers=headers, tablefmt='fancy_grid'), 'cyan')
+                                headers=headers, tablefmt='fancy_grid'), 'cyan')
 
                 return (person_name)
 
@@ -873,11 +874,11 @@ class Amity(object):
         people_unallocated = Amity.find_unallocated(self)
 
         if not people_unallocated:
-            cprint ('All people have been allocated rooms', 'yellow')
+            cprint('All people have been allocated rooms', 'yellow')
         else:
             headers = ['ID', 'Person Name', 'Pending Allocation']
             cprint(tabulate([item.values() for item in people_unallocated],
-                           headers=headers, tablefmt='fancy_grid'), 'cyan')
+                            headers=headers, tablefmt='fancy_grid'), 'cyan')
 
             if unallocated_persons_file != '':
                 # Ensure that the file is created in the folder containing the
@@ -894,13 +895,13 @@ class Amity(object):
                         output_file.write(
                             str(details['person_id']) + '\t' + details['person_name'] + '\t' + details['Unallocated'] + '\n')
 
-                    cprint ('\nSee {0} for output'.format(file_path), 'green')
+                    cprint('\nSee {0} for output'.format(file_path), 'green')
 
     def print_allocations(self, allocation_output_file=''):
         """Prints a list of allocations onto the screen and outputs the registered allocations to a txt file"""
 
         if not Amity.allocation:
-            cprint ('No allocations available', 'yellow')
+            cprint('No allocations available', 'yellow')
         else:
             allocated_rooms = list(
                 set([item['room_id'] for item in Amity.allocation]))
@@ -927,10 +928,10 @@ class Amity(object):
                     output_file.writelines(room_info['room_name'] + '\n' + '------------------------------' +
                                            '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n')
 
-                    cprint (room_info['room_name'] + '\n' + '------------------------------' +
+                    cprint(room_info['room_name'] + '\n' + '------------------------------' +
                            '\n' + ', '.join(sorted(name_of_people_in_room)) + '\n\n', 'cyan')
 
-                cprint ('See {0} for output'.format(file_path), 'green')
+                cprint('See {0} for output'.format(file_path), 'green')
                 return ('Data saved to file')
 
     def save_state(self, db_name=''):
@@ -954,7 +955,7 @@ class Amity(object):
 
             # Drop all tables if exist
             Base.metadata.drop_all(engine)
-            
+
             # Create all tables in the engine statements in raw SQL
             Base.metadata.create_all(engine)
 
@@ -1079,7 +1080,7 @@ class Amity(object):
                     after_allocation_count = len(Amity.allocation)
 
                     if (before_person_count >= after_person_count) or (before_room_count >= after_room_count) or (before_allocation_count >= after_allocation_count):
-                        return colored('Not all data has not been loaded! Check missing data using list functions','yellow')
+                        return colored('Not all data has not been loaded! Check missing data using list functions', 'yellow')
                     else:
                         return colored('Data loaded successfully! Use the list functions to view the data', 'green')
 
