@@ -535,8 +535,8 @@ class Amity(object):
 
                                 # Reallocate office
                                 if prev_allocated_office_id == room_id_to_reallocate:
-                                    return ('{0} is already allocated to {1}'.format(
-                                        person_name, prev_room_name))
+                                    return colored('{0} is already allocated to {1}'.format(
+                                        person_name, prev_room_name), 'yellow')
 
                                 else:
                                     Amity.allocation[prev_allocated_office_index] = {

@@ -19,3 +19,5 @@ models/create_tables.py
 Unallocated.txt
 person.txt
 models/amity2.py
+amity_recording
+amity_video
