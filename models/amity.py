@@ -986,7 +986,7 @@ class Amity(object):
         file_path = os.path.join(CP1_DIR, db_name)
 
         if not os.path.isfile(file_path):
-            raise Exception('Database does not exist')
+            return colored('Database does not exist', 'red')
 
         else:
             if not re.search(r'[a-zA-Z0-9]+\.db', db_name):

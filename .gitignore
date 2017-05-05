@@ -21,3 +21,4 @@ person.txt
 models/amity2.py
 amity_recording
 amity_video
+models/.DS_Store

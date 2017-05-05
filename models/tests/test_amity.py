@@ -149,3 +149,9 @@ class TestAmity(unittest.TestCase):
         result = Amity.load_state(self, 'test_amity')
         self.assertEqual(
             result, colored('Data loaded successfully! Use the list functions to view the data', 'green'))
+
+    def test_db_exists(self):
+        """Test DB exists before loading state"""
+        result = Amity.load_state(self, 'random_db')
+        self.assertEqual(
+            result, colored('Database does not exist', 'red'))
